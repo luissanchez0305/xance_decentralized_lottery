@@ -1,9 +1,14 @@
-'use client'
 import Numbers from '@/components/numbers';
+import TopMenu from '@/components/topMenu';
 
 export default function Page() {
 
     return (
-        <Numbers/>
+        <main>
+          <div className="flex justify-center max-w-md flex-col mx-auto">
+                <TopMenu />
+                <Numbers/>
+            </div>
+        </main>
     )
 }

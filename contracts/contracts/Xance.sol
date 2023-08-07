@@ -11,22 +11,29 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Xance is Ownable {
     using SafeERC20 for IERC20;
     struct BuyInfo {
+        uint8 number;
         address addr;
         uint8 qty;
     }
     mapping (uint8 => BuyInfo[]) public soldNumbers;
 
-    uint8 public maxInvetoryNumber = 100;
+    uint8 public maxInventoryNumber;
     uint unitPrice = 25 * 10 ** 16;
-    uint prize = 2*10**18;
+    uint prize = 14*10**18;
 
     IERC20 public usdToken;
-    uint expiresAt;
+    uint public expiresAt;
     uint16 firstPrize;
+    bool public isActive = false;
+    uint256 public totalSold;
+    address houseWallet;
 
     event Buy(address indexed buyer, uint8[] numbers, uint8[] qtys);
 
-    constructor(address usdAddress, uint _expiresAt) {
+    constructor(address _houseWallet, address usdAddress, uint _expiresAt) {
+        require(_expiresAt > block.timestamp, "Expiration date should be in the future");
+
+        houseWallet = _houseWallet;
         usdToken = IERC20(usdAddress);
         expiresAt = _expiresAt;
     }
@@ -50,17 +57,49 @@ contract Xance is Ownable {
         return count;
     }
 
+    function getAllSoldNumbers() public view returns (BuyInfo[] memory) {
+        uint256 total = 0;
+        for(uint8 i = 0; i < 100; i++) {
+            total += soldNumbers[i].length;
+        }
+
+        BuyInfo[] memory allSoldNumbers = new BuyInfo[](total);
+        uint256 index = 0;
+        for(uint8 i = 0; i < 100; i++) {
+            if(soldNumbers[i].length == 0) continue;
+            
+            for(uint256 j = 0; j < soldNumbers[i].length; j++) {
+                allSoldNumbers[index] = soldNumbers[i][j];
+                index++;
+            }
+        }
+
+        return allSoldNumbers;
+    }
+
     function getWinners() public view isExpired returns (BuyInfo[] memory) {
         require(firstPrize > 0, "Winning number is not set");
 
         uint8 winningNumber = uint8(firstPrize % 100);
 
-        uint256 totalSold = getSoldNumber(winningNumber);
-        require(totalSold > 0, "Winning number was not sold");
+        uint256 totalSold_ = getSoldNumber(winningNumber);
+        require(totalSold_ > 0, "Winning number was not sold");
         return soldNumbers[winningNumber];
     }
 
-    function buy(uint8[] calldata numbers, uint8[] calldata qtys) public {
+    function setMaxInventoryNumber() public onlyOwner {
+        uint256 balance = usdToken.balanceOf(address(this));
+        maxInventoryNumber = uint8(balance / 14 ether);
+        isActive = true;
+    }
+
+    function setFirstPrize(uint16 _firstPrize) public onlyOwner isExpired {
+        require(_firstPrize < 9999, "Winning number should be between 0 and 9999");
+
+        firstPrize = _firstPrize;
+    }
+
+    function buy(uint8[] calldata numbers, uint8[] calldata qtys) public isLotteryActive{
         require(numbers.length > 0, "You should buy at least one number");
         require(numbers.length == qtys.length, "Numbers and quantities should have the same length");
         require(block.timestamp < expiresAt, "You can't buy after the expiration date");
@@ -75,27 +114,22 @@ contract Xance is Ownable {
             for(uint256 j = 0; j < boughtNumbers.length; j++) {
                 totalSoldNumber += boughtNumbers[j].qty;
             }
-            require(qtys[i] + totalSoldNumber < maxInvetoryNumber, "Number is sold out");
+            require(qtys[i] + totalSoldNumber < maxInventoryNumber, "Number is sold out");
             require(number >= 0 && number < 100, "Number should be between 0 and 99");
             total += qtys[i];
 
-            soldNumbers[number].push(BuyInfo(msg.sender, qtys[i]));
+            soldNumbers[number].push(BuyInfo(number, msg.sender, qtys[i]));
         }
 
         uint256 totalAmount = total * unitPrice;
         require(usdToken.balanceOf(msg.sender) >= totalAmount, "You don't have enough USD tokens");
 
         usdToken.safeTransferFrom(msg.sender, address(this), totalAmount);
+        totalSold += totalAmount;
         emit Buy(msg.sender, numbers, qtys);
     }
 
-    function setFirstPrize(uint16 _firstPrize) public onlyOwner isExpired {
-        require(_firstPrize < 9999, "Winning number should be between 0 and 9999");
-
-        firstPrize = _firstPrize;
-    }
-
-    function claim() public isExpired {
+    function claim() public isExpired isLotteryActive {
         require(firstPrize > 0, "Winning number is not set");
         uint8 number = uint8(firstPrize % 100);
 
@@ -107,20 +141,35 @@ contract Xance is Ownable {
             }
         }
 
-        require(position >= 1, "You don't have the winning number");
+        require(position >= 1, "You don't have a winning number");
 
-        uint256 totalSold = getSoldNumbersByAddress(number, msg.sender);
-        uint256 amount = prize * totalSold;
+        uint256 totalSold_ = getSoldNumbersByAddress(number, msg.sender);
+        uint256 amount = prize * totalSold_;
         usdToken.safeTransfer(msg.sender, amount);
         delete soldNumbers[number][position - 1];
     }
 
-    function withdraw(uint256 amount) public onlyOwner {
-        usdToken.safeTransfer(msg.sender, amount);
+    function withdraw() public onlyOwner isExpired {
+        uint256 houseCut = totalSold * 20 / 100;
+        usdToken.safeTransfer(houseWallet, houseCut);
+
+        uint256 balance = usdToken.balanceOf(address(this));
+        BuyInfo[] memory winners = getWinners();
+        
+        for(uint256 i = 0; i < winners.length; i++) {
+            uint256 amount = prize * winners[i].qty;
+            balance -= amount;
+        }
+        usdToken.safeTransfer(msg.sender, balance);
     }
 
     modifier isExpired() {
         require(block.timestamp > expiresAt, "You can't do this before the expiration date");
+        _;
+    }
+
+    modifier isLotteryActive() {
+        require(isActive, "Loterry contract is not active");
         _;
     }
 }

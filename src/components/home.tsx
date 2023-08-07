@@ -1,7 +1,10 @@
 'use client'
 import { useGameContext } from '@/contexts/gameContext'
 import Link from 'next/link'
-import { use, useContext, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useContractRead } from 'wagmi'
+import { use, useContext, useEffect, useState } from 'react'
+import xance from "../abi/Xance.json"
 
 type Number = {
   value: string,
@@ -9,9 +12,12 @@ type Number = {
 }
 
 export default function Home() {
+  const xanceAddress = process.env.NEXT_PUBLIC_XANCE_CONTRACT_ADDRESS!;
+  const router = useRouter();
   const numbers = Array(100).fill('').map((v,i)=>i.toString().padStart(2, '0'))
+  const [boughtNumbers, setBoughtNumbers] = useState<Number[]>([])
   const [total, setTotal] = useState(0)
-  const { editGameContext, numbers: selected } = useGameContext();
+  const { editGameContext, numbers: selected, maxInventoryNumber } = useGameContext();
 
   const chooseNumber = (n: string) => {
     let totalSelected: Number[] = [];
@@ -22,6 +28,13 @@ export default function Home() {
       totalSelected = [...newSelected, {value: n, qty: qty}].sort((a,b)=>parseInt(a.value)-parseInt(b.value))
     } else {
       totalSelected = [...selected, {value: n, qty: 1}].sort((a,b)=>parseInt(a.value)-parseInt(b.value))
+    }
+    const bougthQty = boughtNumbers.find((b) => b.value == n);
+    const selectedQty = totalSelected.find((b) => b.value == n)!;
+    console.log('boughtNumbers', boughtNumbers)
+    if(bougthQty && bougthQty.qty + selectedQty.qty >= maxInventoryNumber){
+      alert(`Solo quedan ${maxInventoryNumber - bougthQty.qty - 1} números disponibles`)
+      return
     }
     
     setTotal((totalSelected.reduce((a, b) => a + b.qty, 0) * 0.25))
@@ -42,9 +55,79 @@ export default function Home() {
     setTotal((totalSelected.reduce((a, b) => a + b.qty, 0) * 0.25))
     editGameContext(totalSelected, "numbers")
   }
+
+  const runBuy = async () => {
+    if(selected.reduce((acc, obj) => { return acc + obj.qty; }, 0) < maxInventoryNumber){
+      alert(`Debes escoger mínimo ${maxInventoryNumber < 10 ? maxInventoryNumber : 10} números`)
+      return
+    }
+    router.push("/numbers")
+  }
+
+  const { data: dataExpiresAt, isError: isErrorExpiresAt, isLoading: isLoadingExpiresAt } = useContractRead({
+    address: xanceAddress as `0x${string}`,
+    abi: xance.abi,
+    functionName: 'expiresAt',
+  })
+
+  const { data: dataNumbers, isError: isErrorNumbers, isLoading: isLoadingNumbers } = useContractRead({
+    address: xanceAddress as `0x${string}`,
+    abi: xance.abi,
+    functionName: 'getAllSoldNumbers',
+  })
+
+  const { data: dataMaxInventoryNum, isError: isErrorMaxInventoryNum, isLoading: isLoadingMaxInventoryNum } = useContractRead({
+    address: xanceAddress as `0x${string}`,
+    abi: xance.abi,
+    functionName: 'maxInventoryNumber',
+  })
+
+  useEffect(() => {
+    if(dataExpiresAt){
+      editGameContext(dataExpiresAt, "expiresAt")
+    }
+  }, [dataExpiresAt])
+
+  useEffect(() => {
+    if(dataNumbers){
+      console.log('dataNumbers', dataNumbers)
+      setBoughtNumbers((dataNumbers as []).map((v: any) => ({value: v.number, qty: v.qty})))
+    }
+  }, [dataNumbers])
+
+  useEffect(() => {
+    if(dataMaxInventoryNum){
+      editGameContext(Number(dataMaxInventoryNum) - 1, "maxInventoryNumber")
+    }
+  }, [dataMaxInventoryNum])
   return (
-    <>
-      <div className="grid grid-cols-5 lg:grid-cols-10 gap-2 overflow-y-scroll">
+    <div>
+      <div className="flex flex-row justify-between">
+        <div className="flex flex-col">
+          <p className="text-2l font-bold">Contrato del sorteo</p>
+          <p className="text-sm"><a href={`https://goerli.etherscan.io/address/${xanceAddress}`} target="_blank">{xanceAddress}</a></p>
+        </div>
+      </div>
+      <div className="flex flex-row justify-between">
+        <div className="flex flex-col">
+          <p className="text-2l font-bold">{`Escoge mínimo ${maxInventoryNumber < 10 ? maxInventoryNumber : 10} números`}</p>
+          <p className="text-sm">Cada uno tiene un costo de $0.25</p>
+        </div>
+        <div className="flex flex-col">
+          <p className="text-2l font-bold">Fecha de sorteo</p>
+          <p className="text-sm">{
+            isLoadingExpiresAt ? 
+              "Loading..." : 
+              isErrorExpiresAt ? 
+                "Error" : 
+                dataExpiresAt ? 
+                  new Date(Number(dataExpiresAt) * 1000).toLocaleString() : 
+                  "Loading..."
+              }
+          </p>
+        </div>
+      </div>
+      <div className="grid grid-cols-5 xs:grid-cols-10 xs:gap-6 overflow-y-scroll">
         {
           numbers.map((v,i)=>(
             <div key={i} className="text-center" onClick={() => chooseNumber(v)}>
@@ -79,8 +162,16 @@ export default function Home() {
           ))
         }
         </div>
-        <Link href="/numbers">${total.toFixed(2)}</Link>
+        {
+          isLoadingExpiresAt || isLoadingNumbers || isLoadingMaxInventoryNum ? 
+            "Loading..." : 
+              isErrorExpiresAt || isErrorNumbers || isErrorMaxInventoryNum ? "Error" : (
+            <button onClick={() => { runBuy() }} className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
+              ${total.toFixed(2)}
+            </button>
+          )
+        }
       </div>
-    </>
+    </div>
   )
 }
