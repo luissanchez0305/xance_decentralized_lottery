@@ -10,6 +10,7 @@ type GameContextType = {
     numbers: Number[],
     maxInventoryNumber: number,
     expiresAt: number,
+    isGameExpired: () => boolean,
     editGameContext: (data: any, typeOfUpdate: String) => void;
 }
 
@@ -17,6 +18,7 @@ const initalState: GameContextType = {
     numbers: [],
     maxInventoryNumber: 0,
     expiresAt: 0,
+    isGameExpired: () => { return false; },
     editGameContext: () => {},
 }
 
@@ -43,8 +45,12 @@ export const GameProvider = ({ children }: PropsWithChildren<{}>) => {
                 break;
         }
     }
+    const isGameExpired = () => {
+        const now = new Date().getTime()
+        return Number(expiresAt) * 1000 < now
+    }
     return (
-        <GameContext.Provider value={{ editGameContext, maxInventoryNumber, numbers, expiresAt }}>
+        <GameContext.Provider value={{ editGameContext, isGameExpired, maxInventoryNumber, numbers, expiresAt }}>
             {children}
         </GameContext.Provider>
     );

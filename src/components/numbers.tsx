@@ -8,23 +8,26 @@ import {
     useAccount, 
     usePrepareContractWrite, 
     useContractWrite, 
-    useWaitForTransaction
+    useWaitForTransaction,
+    useContractRead
 } from "wagmi";
 import { useDebounce } from '@/hooks/useDebounce';
 import { ethers } from "ethers"
 import xance from "../abi/Xance.json"
+import { useRouter } from 'next/navigation';
 
 export default function Numbers() {
-    
+    const router = useRouter();
     const [total, setTotal] = useState(0)
     const [steps, setSteps] = useState(0)
-    const { numbers: selected } = useGameContext();
+    const { numbers: selected, isGameExpired } = useGameContext();
     const debouncedSelectedNumbers = useDebounce(selected, 500)
     const { address, connector } = useAccount();
     const xanceAddress = process.env.NEXT_PUBLIC_XANCE_CONTRACT_ADDRESS;
     const { config: configBuy,
         error: prepareErrorBuy,
         isError: isPrepareErrorBuy, 
+        refetch: refetchBuy,
     } = usePrepareContractWrite({
         address: xanceAddress as `0x${string}`, // Xance address
         abi: xance.abi,
@@ -44,11 +47,13 @@ export default function Numbers() {
     } = useWaitForTransaction({
       hash: dataBuy?.hash,
     })
+    
     const { config: configToken,
         error: prepareErrorToken,
-        isError: isPrepareErrorToken, 
+        isError: isPrepareErrorToken,
+        refetch: refetchToken,
     } = usePrepareContractWrite({
-        address: '0xA063b4EA6f5D924415FbF4E3a590bCb39e695e85', // usd address
+        address: process.env.NEXT_PUBLIC_USD_CONTRACT_ADDRESS! as `0x${string}`, // usd address
         abi: [
             {
                 "inputs": [
@@ -78,8 +83,36 @@ export default function Numbers() {
         functionName: 'approve',
         args: [ xanceAddress, ethers.parseEther(total.toString())
         ],
-        value: BigInt('0')
+        value: ethers.parseEther('0')
     })
+
+    const { data: dataBalance, error: errorBalance, isError: isErrorBalance, isLoading: isLoadingBalance, refetch: refetchBalance } = useContractRead({
+        address: process.env.NEXT_PUBLIC_USD_CONTRACT_ADDRESS! as `0x${string}`,
+        abi: [
+            {
+                "inputs": [
+                    {
+                    "internalType": "address",
+                    "name": "account",
+                    "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ],
+        functionName: 'balanceOf',
+        args: [address]
+    });
+    
     const { data: dataToken, write: writeToken } = useContractWrite(configToken)
  
     const { 
@@ -92,14 +125,42 @@ export default function Numbers() {
     })
 
     useEffect(() => {
+        if(isGameExpired()){
+            router.push('/')
+        }   
+    }, [isGameExpired])
+
+    useEffect(() => {
         setTotal((selected.reduce((a, b) => a + b.qty, 0) * 0.25))
-    }, [selected])
+    }, [selected, dataBalance])
 
     useEffect(() => {
         if (isSuccessToken) {
             setSteps(1)
+            refetchBuy?.()
         }
     }, [isSuccessToken])
+
+    useEffect(() => {
+        if (!isPrepareErrorBuy) {
+            setSteps(1)
+        } else {
+            setSteps(0)
+        }
+    }, [isPrepareErrorBuy])
+
+    useEffect(() => {
+        if(address) {
+            refetchBalance()
+        }
+    }, [address])
+
+    useEffect(() => {
+        if (isSuccessBuy) {
+            refetchBalance()
+            setSteps(2)
+        }
+    }, [isSuccessBuy])
 
     return (
         <>
@@ -127,31 +188,60 @@ export default function Numbers() {
                     ))
                 }
             </div>
+            {
+                (isLoadingBalance) ? 
+                <div>
+                    <label className="mr-3">Loading...</label> 
+                </div> : 
+                (dataBalance) ? 
+                <div>
+                    <label className="mr-3">Balance {ethers.formatEther(dataBalance.toString())} USD</label> 
+                </div> :
+                null
+            }
             <div>
-                Total <Link href="/numbers">${total.toFixed(2)}</Link>
+                Total <Link href="/numbers">{total.toFixed(2)} USD</Link>
             </div>
             <div className="lg:grid-cols-10 gap-6 overflow-y-scroll bg-white absolute inset-x-0 bottom-0 text-end">
                     {
                         (!connector) ? 
                         <label className="mr-3" style={{color: "black"}}>Conectar el wallet</label>
-                        :(
-                        (!writeBuy && steps === 0) ? (
-                            <>
+                        : (
+                            (
+                                ((steps === 0 && isPrepareErrorBuy) || ([1,2].includes(steps) && !isPrepareErrorBuy)) && 
+                                dataBalance && 
+                                (Number(ethers.formatEther(dataBalance.toString())) >= total)
+                            ) ?
+                            (!writeBuy && steps === 0) ? (
                                 <button disabled={!writeToken} onClick={() => writeToken?.()} className="mr-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
                                     {isLoadingToken ? 'Aprobando...' : 'Comprar 1er paso: Aprobar'}
                                 </button>
-                            </>
-                        ) : (
-                            (steps === 1) && (
-                                <button onClick={() => writeBuy?.()} className="mr-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
-                                    {isLoadingBuy ? 'Pagando...' : 'Comprar 2do paso: Pagar'}
-                                </button>
-                        ))
+                            ) : ((steps === 1) ? (
+                                    <button onClick={() => writeBuy?.()} className="mr-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
+                                        {isLoadingBuy ? 'Pagando...' : 'Comprar 2do paso: Pagar'}
+                                    </button>
+                            ) : (
+                                <>
+                                    <label className="mr-3 w-full text-end" style={{color: "black"}}>Números comprados con éxito. BUENA SUERTE!!</label>
+                                    <a style={{paddingLeft: '5px', color: 'blue'}} href="/">Regresar</a>
+                                </>
+                            )) : <div>Error: {(prepareErrorBuy || errorBuy)?.message}</div>
                         )
                     }
             </div>
-            {(isPrepareErrorBuy || isErrorBuy || isPrepareErrorToken || isErrorToken) && (
-                <div>Error: {(prepareErrorBuy || errorBuy || prepareErrorToken || errorToken)?.message}</div>
+            {(isPrepareErrorBuy || isErrorBuy) && (
+                (prepareErrorBuy || errorBuy)?.message.includes('have enough USD') ? 
+                    <div>Error: No cuentas con suficiente saldo</div> : 
+                (prepareErrorBuy || errorBuy)?.message.includes('You should buy at least one') ? 
+                    <div>Error: Regrese a la página anterior para escoger sus números
+                        <a style={{paddingLeft: '5px'}} href="/">Regresar</a>
+                    </div> : 
+                (!(prepareErrorBuy || errorBuy)?.message.includes('allowance')) ? (
+                    <div>Error: {(prepareErrorBuy || errorBuy)?.message}</div>
+                ) : (null)
+            )}
+            {(isPrepareErrorToken || isErrorToken) && (
+                <div>Error Token: {(prepareErrorToken || errorToken)?.message}</div>
             )}
         </>
     )

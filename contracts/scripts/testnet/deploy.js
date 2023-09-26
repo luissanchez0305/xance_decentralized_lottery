@@ -11,11 +11,12 @@ async function main() {
   const [owner, walletPrize] = await ethers.getSigners();
   console.log('Deploying contracts with the account:', owner.address);
 
+  const network = 'binance';
   const weiAmount = (await ethers.provider.getBalance(owner.address)).toString();
-  console.log(`Account balances: ${ethers.formatEther(weiAmount)} ETH`);
+  console.log(`Account balances: ${ethers.formatEther(weiAmount)} ${network === 'binance' ? 'BNB' : 'ETH'}`);
 
   let token;
-  if(!fs.existsSync('scripts/testnet/deployed/token.json')) {
+  if(!fs.existsSync(`scripts/testnet/deployed/${network}/token.json`)) {
     token = await ethers.deployContract("Token");
     await token.waitForDeployment();
 
@@ -26,7 +27,7 @@ async function main() {
     const jsonData = JSON.stringify(data);
   
     fs.writeFileSync(
-      `scripts/testnet/deployed/token.json`,
+      `scripts/testnet/deployed/${network}/token.json`,
       jsonData,
       function (err) {
         if (err) {
@@ -38,14 +39,14 @@ async function main() {
   }
   else {
     const Token = fs.readFileSync(
-      'scripts/testnet/deployed/token.json',
+      `scripts/testnet/deployed/${network}/token.json`,
       'utf8',
     );
     const tokenData = JSON.parse(Token);
     token = await ethers.getContractAt("Token", tokenData.address);
   }
 
-  const date = '2023-08-08T00:30:00Z';
+  const date = '2023-09-27T12:00:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   
@@ -63,7 +64,7 @@ async function main() {
   const jsonData = JSON.stringify(data);
 
   fs.writeFileSync(
-    `scripts/testnet/deployed/xance-${date}.json`,
+    `scripts/testnet/deployed/${network}/xance-${date}.json`,
     jsonData,
     function (err) {
       if (err) {

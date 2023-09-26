@@ -4,14 +4,14 @@ const {
   } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
   const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
   const { expect } = require("chai");
-const { before } = require("node:test");
+const { before, beforeEach } = require("node:test");
 const exp = require("constants");
 
 describe("Xance", function () {
     async function deployFixture() {
         const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
         const ONE_WEI = 1_000_000_000_000_000_000n;
-        const d = new Date('2023-08-06T05:00:00Z');
+        const d = new Date('2023-08-13T05:00:00Z');
         const expireTime = d.getTime() / 1000; //Math.floor(Date.now() / 1000) + 60 * 60 * 1;
 
         // Contracts are deployed using the first signer/account by default
@@ -68,36 +68,35 @@ describe("Xance", function () {
         });
     });
 
-    describe("Claim", function () {
+    describe("Claim & withdraw", function () {
         it("Should buy tickets and claim", async function () {
-            const { xance, owner, expireTime, oneToken, token, account1, account2, account3, account4, account5 } = await loadFixture(deployFixture);
-
-            const max = await xance.maxInventoryNumber();
-            console.log('max', max.toString());
-            await token.transfer(account1.address, oneToken);
+            const { xance, token, owner, expireTime, oneToken, account1, account2, account3, account4, account5 } = await loadFixture(deployFixture);
+            
+            await token.transfer(account1.address, oneToken * 10n);
             await token.transfer(account2.address, oneToken * 10n);
             await token.transfer(account3.address, oneToken * 10n);
             await token.transfer(account4.address, oneToken * 10n);
             await token.transfer(account5.address, oneToken * 10n); 
 
-            await token.connect(account1).approve(xance.target, oneToken);
+            await token.connect(account1).approve(xance.target, oneToken * 10n);
             await token.connect(account2).approve(xance.target, oneToken * 10n);
             await token.connect(account3).approve(xance.target, oneToken * 10n);
             await token.connect(account4).approve(xance.target, oneToken * 10n);
             await token.connect(account5).approve(xance.target, oneToken * 10n);
-
+            
             await xance.connect(account1).buy([1], [1]);
             await xance.connect(account2).buy([2], [6]);
             await xance.connect(account3).buy([3,10], [6,8]);
-            await xance.connect(account4).buy([4,10], [5,14]);
+            await xance.connect(account4).buy([4,10], [5,4]);
             await xance.connect(account5).buy([5,5], [1,3]);
 
             await time.increaseTo(expireTime + 1);
-            await xance.connect(owner).setFirstPrize(1010);
+            await xance.connect(owner).setPrizeNumbers([1010, 1034, 1005]);
             
             await xance.connect(account3).claim();
             const finalBalance = await token.balanceOf(account3.address);
             /*
+            --account3--
             balance inicial 10
             compra de 8 numero 10 = 8 * 0.25 = 2
             compra de 6 numero 3 = 6 * 0.25 = 1.5
@@ -108,6 +107,70 @@ describe("Xance", function () {
             balance final 118.5
             */
             expect(finalBalance.toString()).to.equal('118500000000000000000');
+        });
+
+        it("Should withdraw right amount", async function () {
+            const { xance, token, owner, expireTime, oneToken, account1, account2, account3, account4, account5 } = await loadFixture(deployFixture);
+            
+            await token.transfer(account1.address, oneToken * 10n);
+            await token.transfer(account2.address, oneToken * 10n);
+            await token.transfer(account3.address, oneToken * 10n);
+            await token.transfer(account4.address, oneToken * 10n);
+            await token.transfer(account5.address, oneToken * 10n); 
+
+            await token.connect(account1).approve(xance.target, oneToken * 10n);
+            await token.connect(account2).approve(xance.target, oneToken * 10n);
+            await token.connect(account3).approve(xance.target, oneToken * 10n);
+            await token.connect(account4).approve(xance.target, oneToken * 10n);
+            await token.connect(account5).approve(xance.target, oneToken * 10n);
+            
+            await xance.connect(account1).buy([1], [1]);
+            await xance.connect(account2).buy([2], [6]);
+            await xance.connect(account3).buy([3,10], [6,8]);
+            await xance.connect(account4).buy([4,10], [5,4]);
+            await xance.connect(account5).buy([5,5], [1,3]);
+            
+            await time.increaseTo(expireTime + 1);
+            await xance.connect(owner).setPrizeNumbers([1010, 1034, 1005]);
+            
+            await xance.connect(owner).withdraw();
+            const finalBalance = await token.balanceOf(xance.target);
+            /*
+            --account3--
+            balance inicial 10
+            compra de 8 numero 10 = 8 * 0.25 = 2
+            compra de 6 numero 3 = 6 * 0.25 = 1.5
+            Total de compra 3.5
+            balance 6.5
+            numero ganador 1010 primer premio
+            8 numeros 10 = 8 * 14 = 112
+            balance final 118.5
+
+
+            --account4--
+            balance inicial 10
+            compra de 5 numero 4 = 5 * 0.25 = 1.25
+            compra de 4 numero 10 = 4 * 0.25 = 1
+            Total de compra 2.25
+            balance 7.75
+            numero ganador 1010 primer premio
+            4 numeros 10 = 4 * 14 = 56
+            balance final 63.75
+
+            --account5--
+            balance inicial 10
+            compra de 4 numero 5 = 1 * 0.25 = 1
+            total de compra 1
+            balance 9
+            numero ganador 1005 tercer premio
+            4 numeros 5 = 4 * 2 = 8
+            balance final 17
+
+            balance del contrato 500
+            total en premios 112 + 56 + 8 = 176
+            balance a retirar 500 - 176 = 324
+            */
+            expect(finalBalance.toString()).to.equal('176000000000000000000');
         });
     });
 

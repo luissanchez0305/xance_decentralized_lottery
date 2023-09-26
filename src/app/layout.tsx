@@ -17,9 +17,10 @@ import {
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
 import { publicProvider } from 'wagmi/providers/public';
+import { json } from 'stream/consumers';
 
 const { chains, publicClient } = configureChains(
-  [goerli],
+  [bscTestnet],
   [
     alchemyProvider({ apiKey: process.env.NEXT_PUBLIC_ALCHEMY_ID! }),
     publicProvider()
@@ -28,7 +29,7 @@ const { chains, publicClient } = configureChains(
 
 const { connectors } = getDefaultWallets({
   appName: 'Xance',
-  projectId: 'Xance',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_ID!,
   chains
 });
 
