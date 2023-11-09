@@ -29,7 +29,7 @@ module.exports = {
       gasPrice: 'auto',
     },
     binanceTest: {
-      url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
+      url: `https://data-seed-prebsc-1-s2.bnbchain.org:8545`,
       accounts: [
         `0x${ownerPK}`, `0x${accocunt1}`,
         /* `

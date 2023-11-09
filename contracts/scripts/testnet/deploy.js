@@ -46,7 +46,8 @@ async function main() {
     token = await ethers.getContractAt("Token", tokenData.address);
   }
 
-  const date = '2023-09-27T12:00:00Z';
+  console.log(`Token deployed to ${token.target}`);
+  const date = '2023-10-08T17:00:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   
@@ -54,7 +55,8 @@ async function main() {
   await xance.waitForDeployment();
 
   const maxAmount = ethers.parseEther('200');
-  await token.transfer(xance.target, maxAmount);
+  const transferTrx = await token.transfer(xance.target, maxAmount);
+  await transferTrx.wait();
 
   await xance.setMaxInventoryNumber();
   const data = {

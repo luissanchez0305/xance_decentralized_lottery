@@ -75,16 +75,22 @@ export default function Home() {
     router.push("/numbers")
   }
 
-  const { data: dataExpiresAt, isError: isErrorExpiresAt, isLoading: isLoadingExpiresAt } = useContractRead({
-    address: xanceAddress as `0x${string}`,
-    abi: xance.abi,
-    functionName: 'expiresAt',
-  })
-
   const { data: dataNumbers, isError: isErrorNumbers, isLoading: isLoadingNumbers } = useContractRead({
     address: xanceAddress as `0x${string}`,
     abi: xance.abi,
     functionName: 'getAllSoldNumbers',
+  })
+
+  const { data: dataWinners, isError: isErrorWinners, isLoading: isLoadingWinners } = useContractRead({
+    address: xanceAddress as `0x${string}`,
+    abi: xance.abi,
+    functionName: 'getAllPrizeNumbers',
+  })
+
+  const { data: dataExpiresAt, isError: isErrorExpiresAt, isLoading: isLoadingExpiresAt } = useContractRead({
+    address: xanceAddress as `0x${string}`,
+    abi: xance.abi,
+    functionName: 'expiresAt',
   })
 
   const { data: dataMaxInventoryNum, isError: isErrorMaxInventoryNum, isLoading: isLoadingMaxInventoryNum } = useContractRead({
@@ -93,12 +99,6 @@ export default function Home() {
     functionName: 'maxInventoryNumber',
   })
 
-  const { data: dataWinners, isError: isErrorWinners, isLoading: isLoadingWinners } = useContractRead({
-    address: xanceAddress as `0x${string}`,
-    abi: xance.abi,
-    functionName: 'getAllPrizeNumbers',
-  })
-  
   const { config: configClaim,
     error: prepareErrorClaim,
     isError: isPrepareErrorClaim, 
@@ -145,6 +145,7 @@ const {
 
   useEffect(() => {
     if(dataMaxInventoryNum){
+      console.log('------------dataMaxInventoryNum', dataMaxInventoryNum)
       editGameContext(Number(dataMaxInventoryNum) - 1, "maxInventoryNumber")
     }
   }, [dataMaxInventoryNum])
