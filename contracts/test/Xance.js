@@ -11,7 +11,7 @@ describe("Xance", function () {
     async function deployFixture() {
         const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
         const ONE_WEI = 1_000_000_000_000_000_000n;
-        const d = new Date('2023-08-13T05:00:00Z');
+        const d = new Date('2024-03-17T05:00:00Z');
         const expireTime = d.getTime() / 1000; //Math.floor(Date.now() / 1000) + 60 * 60 * 1;
 
         // Contracts are deployed using the first signer/account by default

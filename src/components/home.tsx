@@ -1,10 +1,10 @@
 'use client'
 import { useGameContext } from '@/contexts/gameContext'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi'
-import { use, useCallback, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import xance from "../abi/Xance.json"
+import Header from './header'
 
 type Number = {
   value: string,
@@ -15,10 +15,11 @@ export default function Home() {
   const xanceAddress = process.env.NEXT_PUBLIC_XANCE_CONTRACT_ADDRESS ?? '0x0';
   const xanceUrl = `${process.env.NEXT_PUBLIC_SCAN_URL}${xanceAddress}`
   const router = useRouter();
-  const numbers = Array(100).fill('').map((v,i)=>i.toString().padStart(2, '0'))
+  const [numbers, setNumbers] = useState<string[]>();
   const [textDisplay, setTextDisplay] = useState("Loading...")
   const [boughtNumbers, setBoughtNumbers] = useState<Number[]>([])
   const [showNumbers, setShowNumbers] = useState(false)
+  const [number, setNumber] = useState<number>();
   const [total, setTotal] = useState(0)
   const [isWinner, setIsWinner] = useState(false)
   const { address } = useAccount();
@@ -102,22 +103,43 @@ export default function Home() {
   const { config: configClaim,
     error: prepareErrorClaim,
     isError: isPrepareErrorClaim, 
-} = usePrepareContractWrite({
-    address: xanceAddress as `0x${string}`, // Xance address
-    abi: xance.abi,
-    functionName: 'claim',
-    args: []
-})
-const { data: dataClaim, write: writeClaim } = useContractWrite(configClaim)
+  } = usePrepareContractWrite({
+      address: xanceAddress as `0x${string}`, // Xance address
+      abi: xance.abi,
+      functionName: 'claim',
+      args: []
+  })
+  const { data: dataClaim, write: writeClaim } = useContractWrite(configClaim)
 
-const { 
-    isLoading: isLoadingClaim, 
-    error: errorClaim, 
-    isError: isErrorClaim, 
-    isSuccess: isSuccessClaim
-} = useWaitForTransaction({
-  hash: dataClaim?.hash,
-})
+  const { 
+      isLoading: isLoadingClaim, 
+      error: errorClaim, 
+      isError: isErrorClaim, 
+      isSuccess: isSuccessClaim
+  } = useWaitForTransaction({
+    hash: dataClaim?.hash,
+  })
+
+  const inputNumber = (e: any) => {
+    const val = parseInt(e.target.value);
+    if(val > 99 || val < 0) return;
+    setNumber(val)
+    if(!e.target.value){
+      setShowNumbers(false)
+      return;
+    }
+
+    if(e.target.value.length === 1){
+      const numbersArray = Array(10).fill('').map((v,i)=>i.toString());
+      setNumbers(numbersArray.map((n) => e.target.value + n));
+    }
+
+    if(e.target.value.length > 1){
+      setNumbers([e.target.value])
+    }
+    
+    setShowNumbers(true);
+  }
 
   useEffect(() => {
     if(dataExpiresAt){
@@ -138,8 +160,9 @@ const {
 
   useEffect(() => {
     if(dataNumbers){
+      console.log('------------dataNumbers', dataNumbers);
       setBoughtNumbers((dataNumbers as []).map((v: any) => ({value: v.number.toString(), qty: v.qty})))
-      setShowNumbers(true)
+      // setShowNumbers(true)
     }
   }, [dataNumbers])
 
@@ -152,47 +175,53 @@ const {
   return (
     <>
       <div className="lg:overflow-y-scroll">
-        <div className="flex flex-row justify-between bg-indigo-500">
-          <div className="flow-root w-full">
-            <label className="text-2l font-bold float-left">Contrato del sorteo</label>
-            <label className="text-sm float-right text-end"><a href={xanceUrl} target="_blank">{xanceAddress.substring(0,7) + "..." + xanceAddress.substring(38)}</a></label>
+        <Header xanceUrl={xanceUrl} hash={xanceAddress} isOpen={true} date={textDisplay} maxInventoryNumber={maxInventoryNumber} />
+        <div className="h-40 grid grid-cols-1 gap-4 content-center xs:gap-8 pt-2 bg-gradient-to-b from-indigo-500">
+          <div className="mb-6 mx-auto">
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Escoge un número</label>
+              <input 
+                type="number" 
+                id="large-input" 
+                className="block w-[100px] text-2xl mx-auto p-6 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-base focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                onChange={inputNumber} value={number}
+              />
           </div>
         </div>
-        <div className="flex flex-row justify-between bg-indigo-500">
-          <div className="flex flex-col">
-            <p className="text-2l font-bold">{`Escoge mínimo ${maxInventoryNumber < 10 ? maxInventoryNumber : 10} números`}</p>
-            <p className="text-sm">Costo por número: $0.25</p>
-          </div>
-          <div className="flex flex-col">
-            <p className="text-2l font-bold">Fecha de sorteo</p>
-            <p className="text-sm">{textDisplay}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-5 xs:grid-cols-10 xs:gap-8 pt-2 bg-gradient-to-b from-indigo-500">
-          { showNumbers &&
-            numbers.map((v,i)=>(
-              <div key={i} className="text-center rounded-full border-2" style={{
-                borderColor: isSoldOut(v) ? "#000" : "#fff",
-                cursor: isSoldOut(v) || isGameExpired() ? "not-allowed" : "pointer"
-              }} onClick={() => chooseNumber(v)}>
-                {v}
-              </div>
-            ))
-          }
+        <div className="grid grid-cols-5">
+        { (showNumbers && numbers) &&
+          numbers.map((v,i)=>(
+            <div key={i} className="text-center rounded-full border-2" style={{
+              borderColor: isSoldOut(v) ? "#000" : "#fff",
+              cursor: isSoldOut(v) || isGameExpired() ? "not-allowed" : "pointer"
+            }} onClick={() => chooseNumber(v)}>
+              {v}
+            </div>
+          ))
+        }
         </div>
       </div>
-      <div className="flex flex-row sticky inset-x-0 bottom-0 h-10 mt-2" style={{backgroundColor:"white", color: "black"}}>
+      { 
+        selected.length > 0 ? 
+          <div className="flex flex-row overflow-x-auto w-full mt-10 border-t-2 border-[#afafaf]">
+            Números seleccionados
+          </div>
+        : null
+      }
+      
+      <div className="grid grid-cols-5 sticky inset-x-0 bottom-0 mt-2">
         {
-          (<div className="flex flex-row overflow-x-auto w-full">
-          {selected.map((v,i)=>(
-            <div key={i} className="basis-3/4 flex justify-start">
-              <div className="flex-none w-8" onClick={() => removeNumber(v.value)}>
+          selected.map((v,i)=>(
+            <div key={i} className="grid grid-cols-2">
+              <div className="text-center rounded-full border-2" style={{
+                  borderColor: "#fff", cursor: "pointer"
+                }} onClick={() => removeNumber(v.value)}
+              >
                 {v.value}
               </div>
               <div style={{
-                backgroundColor: "#202020",
+                backgroundColor: "transparent",
                 color: "#fff",
-                padding: "8px",
+                padding: "0 0 0 4px",
                 margin: 0,
                 borderRadius: "5px",
                 fontSize: "12px",
@@ -203,9 +232,10 @@ const {
                 <p>{v.qty}</p>
               </div>
             </div>
-          ))}
-          </div>)
-        }
+          )
+        )}
+      </div>
+      <div className="flex flex-row justify-between mt-10 w-full">
         {
           isLoadingExpiresAt || isLoadingNumbers || isLoadingMaxInventoryNum ? 
             "Loading..." : 
@@ -216,10 +246,10 @@ const {
                   </label> : <button onClick={() => writeClaim?.()} className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
                   { isLoadingClaim ? "Reclamando..." : "Reclamar Premio" }
                 </button>) : 
-                <label className="mr-2 m-auto w-full text-end" style={{color: "black"}}>
+                <label className="mr-2 m-auto text-end" style={{color: "black"}}>
                   Sorteo Expirado
                 </label>) : (
-              <div className="mr-3 w-[25%] text-end">
+              <div className="mr-3 w-full text-end">
                 <button onClick={() => { runBuy() }} className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
                   ${total.toFixed(2)}
                 </button>

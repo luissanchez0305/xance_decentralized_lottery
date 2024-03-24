@@ -164,17 +164,20 @@ export default function Numbers() {
 
     return (
         <>
-            <div className="grid grid-cols-5 lg:grid-cols-10 gap-6 overflow-y-scroll">
+            <div className="grid grid-cols-5 lg:grid-cols-10 gap-6 overflow-y-scroll py-7 bg-gradient-to-b from-indigo-500">
                 {
                     selected.map((v,i)=>(
-                        <div key={i} className="text-center" >
-                            <div key={i} className="flex-none w-8">
+                        <div key={i} className="grid grid-cols-2" >
+                            <div key={i} className="text-center rounded-full border-2" style={{
+                                borderColor: "#fff", cursor: "pointer"
+                                }}
+                            >
                                 {v.value}
                             </div>
                             <div style={{
-                                backgroundColor: "#202020",
+                                backgroundColor: "transparent",
                                 color: "#fff",
-                                padding: "10px",
+                                padding: "0 0 0 4px",
                                 margin: 0,
                                 borderRadius: "5px",
                                 fontSize: "12px",
