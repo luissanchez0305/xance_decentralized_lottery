@@ -16,15 +16,36 @@ export default function LotteryNumbersPlayed({numbersBought}: Props) {
                         <h2 className="font-normal">Usted compró estos numeros en este sorteo:</h2>
                     }
                     {
-                        numbersBought.length > 0 ?
-                        numbersBought.map((item, id) => (
-                            <>
-                                <div 
-                                    key={id} 
-                                >Numero: {item.number} - Cantidad: {item.qty}</div>
-                            </>
-                        )) :
-                        <label className="ml-5">No compró numeros para este sorteo</label>
+                        <div className="flex flex-col">
+                            <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                <div className="inline-block min-w-full py-2 sm:px-6 lg:px-8">
+                                    <div className="overflow-hidden">
+                                        <table
+                                            className="min-w-full text-left text-sm font-light text-surface dark:text-white">
+                                            <thead
+                                            className="border-b border-neutral-200 bg-neutral-50 font-medium dark:border-white/10 dark:text-neutral-800">
+                                            <tr>
+                                                <th scope="col" className="px-6 py-4">Numero</th>
+                                                <th scope="col" className="px-6 py-4">Cantidad</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {
+                                                numbersBought.length > 0 ?
+                                                numbersBought.map((item, id) => (              
+                                                    <tr key={id} className="border-b border-neutral-200 dark:border-white/10">
+                                                        <td className="whitespace-nowrap px-6 py-4 font-medium">{item.number}</td>
+                                                        <td className="whitespace-nowrap px-6 py-4">{item.qty}</td>
+                                                    </tr>
+                                                )) :
+                                                <label className="ml-5">No compró numeros para este sorteo</label>
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     }
                 </div>
             </nav>

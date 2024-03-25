@@ -1,12 +1,18 @@
+'use client'
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const Sidebar = ({
-  isOpen,
-  toggle,
-}: {
-  isOpen: boolean;
-  toggle: () => void;
-}): JSX.Element => {
+const Sidebar = (): JSX.Element => {
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => {
+    console.log('toggle is open', isOpen);
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    console.log('is open', isOpen);
+  }, [])
+
   return (
     <div className="flex flex-col w-full pb-5">
       <div
@@ -39,7 +45,7 @@ const Sidebar = ({
                           strokeLinecap: 'butt', 
                           strokeLinejoin: 'miter', 
                           strokeMiterlimit: 10, 
-                          fill: 'rgb(59,59,59)', 
+                          fill: 'rgb(216,206,226)', 
                           fillRule: 'nonzero', 
                           opacity: 1,
               }} transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
@@ -47,7 +53,7 @@ const Sidebar = ({
           </svg>
         </button>  
       </div>
-      <div className="w-[43%] h-[24vh] bg-[#e7e7ff] fixed transition-[0.6s] z-[1000] text-[#474545]" style={{
+      <div className="w-[43%] h-[23vh] bg-[#e7e7ff] fixed transition-[0.6s] z-[1000] text-[#474545] rounded-b-xl rounded-bl-xl" style={{
         top: isOpen ? '-100%' : '0'
       }}>
         <h1 className=" text-[24px] text-center">Menu</h1>

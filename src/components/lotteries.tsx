@@ -10,7 +10,7 @@ export default async function Lotteries() {
     return (
         <div className="relative flex flex-col bg-gradient-to-b from-indigo-500">
             <nav className="flex min-w-[240px] flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700">
-                <h2 className="font-normal">Juega ahora con estos sorteos!!</h2>
+                <h2 className="font-normal text-[24px]">Juega ahora con estos sorteos!!</h2>
                 <div className="grid grid-cols-3">
                 {
                     futureLotteries.length > 0 ?
@@ -25,7 +25,7 @@ export default async function Lotteries() {
                     <label className="ml-5">No hay sorteos</label>
                 }
                 </div>
-                <h1 className="border-t-2 border-[#afafaf] pt-3 mt-3">Sorteos Pasados</h1>
+                <h1 className="border-t-2 border-[#afafaf] pt-3 mt-3 text-[24px] content-center">Sorteos Pasados</h1>
                 <div className="grid grid-cols-3">
                 {
                     pastLotteries.length > 0 ?

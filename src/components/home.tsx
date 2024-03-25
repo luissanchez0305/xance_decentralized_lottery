@@ -160,7 +160,6 @@ export default function Home() {
 
   useEffect(() => {
     if(dataNumbers){
-      console.log('------------dataNumbers', dataNumbers);
       setBoughtNumbers((dataNumbers as []).map((v: any) => ({value: v.number.toString(), qty: v.qty})))
       // setShowNumbers(true)
     }
@@ -168,7 +167,6 @@ export default function Home() {
 
   useEffect(() => {
     if(dataMaxInventoryNum){
-      console.log('------------dataMaxInventoryNum', dataMaxInventoryNum)
       editGameContext(Number(dataMaxInventoryNum) - 1, "maxInventoryNumber")
     }
   }, [dataMaxInventoryNum])
