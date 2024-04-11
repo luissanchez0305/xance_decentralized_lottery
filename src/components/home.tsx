@@ -5,6 +5,8 @@ import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite,
 import { useEffect, useState } from 'react'
 import xance from "../abi/Xance.json"
 import Header from './header'
+import { lottery as _lottery } from "@prisma/client";
+import { lotteryType } from '@/utils/types'
 
 type Number = {
   value: string,
@@ -12,8 +14,6 @@ type Number = {
 }
 
 export default function Home() {
-  const xanceAddress = process.env.NEXT_PUBLIC_XANCE_CONTRACT_ADDRESS ?? '0x0';
-  const xanceUrl = `${process.env.NEXT_PUBLIC_SCAN_URL}${xanceAddress}`
   const router = useRouter();
   const [numbers, setNumbers] = useState<string[]>();
   const [textDisplay, setTextDisplay] = useState("Loading...")
@@ -23,7 +23,15 @@ export default function Home() {
   const [total, setTotal] = useState(0)
   const [isWinner, setIsWinner] = useState(false)
   const { address } = useAccount();
-  const { editGameContext, numbers: selected, maxInventoryNumber, isGameExpired } = useGameContext();
+  const { editGameContext, numbers: selected, maxInventoryNumber, isGameExpired, lottery } = useGameContext();
+
+  const getDefaultLottery = async () => {
+    const lottery = await fetch(`/api/lottery/`).then(res => res.json())
+    editGameContext(lottery, "lottery");
+  }
+  const xanceUrl = () => {
+    return `${process.env.NEXT_PUBLIC_SCAN_URL}${lottery?.contractHash}`;
+  }
 
   const chooseNumber = (n: string) => {
     let totalSelected: Number[] = [];
@@ -77,25 +85,25 @@ export default function Home() {
   }
 
   const { data: dataNumbers, isError: isErrorNumbers, isLoading: isLoadingNumbers } = useContractRead({
-    address: xanceAddress as `0x${string}`,
+    address: lottery?.contractHash as `0x${string}`,
     abi: xance.abi,
     functionName: 'getAllSoldNumbers',
   })
 
   const { data: dataWinners, isError: isErrorWinners, isLoading: isLoadingWinners } = useContractRead({
-    address: xanceAddress as `0x${string}`,
+    address: lottery?.contractHash as `0x${string}`,
     abi: xance.abi,
     functionName: 'getAllPrizeNumbers',
   })
 
   const { data: dataExpiresAt, isError: isErrorExpiresAt, isLoading: isLoadingExpiresAt } = useContractRead({
-    address: xanceAddress as `0x${string}`,
+    address: lottery?.contractHash as `0x${string}`,
     abi: xance.abi,
     functionName: 'expiresAt',
   })
 
   const { data: dataMaxInventoryNum, isError: isErrorMaxInventoryNum, isLoading: isLoadingMaxInventoryNum } = useContractRead({
-    address: xanceAddress as `0x${string}`,
+    address: lottery?.contractHash as `0x${string}`,
     abi: xance.abi,
     functionName: 'maxInventoryNumber',
   })
@@ -104,7 +112,7 @@ export default function Home() {
     error: prepareErrorClaim,
     isError: isPrepareErrorClaim, 
   } = usePrepareContractWrite({
-      address: xanceAddress as `0x${string}`, // Xance address
+      address: lottery?.contractHash as `0x${string}`, // Xance address
       abi: xance.abi,
       functionName: 'claim',
       args: []
@@ -170,10 +178,16 @@ export default function Home() {
       editGameContext(Number(dataMaxInventoryNum) - 1, "maxInventoryNumber")
     }
   }, [dataMaxInventoryNum])
+
+  useEffect(() => {
+    getDefaultLottery();
+  }, []);
+
+
   return (
     <>
       <div className="lg:overflow-y-scroll">
-        <Header xanceUrl={xanceUrl} hash={xanceAddress} isOpen={true} date={textDisplay} maxInventoryNumber={maxInventoryNumber} />
+        <Header xanceUrl={xanceUrl()} hash={lottery ? lottery.contractHash : '0x0'} isOpen={true} date={textDisplay} maxInventoryNumber={maxInventoryNumber} />
         <div className="h-40 grid grid-cols-1 gap-4 content-center xs:gap-8 pt-2 bg-gradient-to-b from-indigo-500">
           <div className="mb-6 mx-auto">
               <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Escoge un número</label>

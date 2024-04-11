@@ -3,7 +3,6 @@ import { useGameContext } from '@/contexts/gameContext';
 import Link from 'next/link';
 import { useEffect, useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import TopMenu from './topMenu';
 import { 
     useAccount, 
     usePrepareContractWrite, 
@@ -15,27 +14,30 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { ethers } from "ethers"
 import xance from "../abi/Xance.json"
 import { useRouter } from 'next/navigation';
+import { prisma } from '../../db/prisma';
 
 export default function Numbers() {
     const router = useRouter();
     const [total, setTotal] = useState(0)
     const [steps, setSteps] = useState(0)
-    const { numbers: selected, isGameExpired } = useGameContext();
+    const { numbers: selected, isGameExpired, lottery } = useGameContext();
     const debouncedSelectedNumbers = useDebounce(selected, 500)
     const { address, connector } = useAccount();
-    const xanceAddress = process.env.NEXT_PUBLIC_XANCE_CONTRACT_ADDRESS;
     const { config: configBuy,
         error: prepareErrorBuy,
         isError: isPrepareErrorBuy, 
         refetch: refetchBuy,
     } = usePrepareContractWrite({
-        address: xanceAddress as `0x${string}`, // Xance address
+        address: lottery?.contractHash as `0x${string}`, // Xance address
         abi: xance.abi,
         functionName: 'buy',
         args: [
             debouncedSelectedNumbers.map((n) => n.value), 
             debouncedSelectedNumbers.map((n) => n.qty)
-        ]
+        ],
+        onSuccess(data) {
+            // setBoughtWalletOnContract();
+        },
     })
     const { data: dataBuy, write: writeBuy } = useContractWrite(configBuy)
  
@@ -81,7 +83,7 @@ export default function Numbers() {
               }
         ],
         functionName: 'approve',
-        args: [ xanceAddress, ethers.parseEther(total.toString())
+        args: [ lottery?.contractHash, ethers.parseEther(total.toString())
         ],
         value: ethers.parseEther('0')
     })
@@ -123,6 +125,15 @@ export default function Numbers() {
     } = useWaitForTransaction({
       hash: dataToken?.hash,
     })
+
+    const setBoughtWalletOnContract = async () => {
+        const lotteries = await prisma.lottery_players.findMany({
+            where: {
+                playerWallet: address,
+                lottery_id: 4
+            }
+        });
+    }
 
     useEffect(() => {
         if(isGameExpired()){

@@ -7,6 +7,7 @@ const accocunt2 = process.env.ACCOUNT_2_PRIVATE_KEY;
 const accocunt3 = process.env.ACCOUNT_3_PRIVATE_KEY;
 const accocunt4 = process.env.ACCOUNT_4_PRIVATE_KEY;
 const accocunt5 = process.env.ACCOUNT_5_PRIVATE_KEY;
+const accocunt6 = process.env.ACCOUNT_6_PRIVATE_KEY;
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
@@ -32,6 +33,7 @@ module.exports = {
       url: `https://data-seed-prebsc-1-s1.bnbchain.org:8545`,
       accounts: [
         `0x${ownerPK}`, `0x${accocunt1}`,
+        `0x${accocunt6}`,
         /* `
         `0x${participant2}`,
         `0x${participant3}`,

@@ -11,6 +11,7 @@ const nextConfig = {
     },
     images: { unoptimized: true },
     experimental: {
+      serverActions: true,
       appDir: true,
       fontLoaders: [
         { loader: "@next/font/google", options: { subsets: ["latin"] } },
