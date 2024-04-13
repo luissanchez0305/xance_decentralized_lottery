@@ -1,14 +1,22 @@
-'use client'
-import { Bars3Icon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import Navigation from "@/components/navigation";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { PropsWithChildren } from "react";
 
-export default function TopMenu() {
-    const [collapsed, setSidebarCollapsed] = useState(false);
+export default function TopMenu(prop: PropsWithChildren) {
     return (
-        <div className="bg-indigo-700 text-white">
-        <button onClick={() => setSidebarCollapsed((prev) => !prev)}>
-          <Bars3Icon className="w-10 h-10" />
-        </button>
-      </div>
+        <>
+        <nav className="bg-white border-gray-200 bg-gradient-to-b from-[#762b8dda] to-indigo-500 mx-auto max-w-md justify-center">
+            <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
+                <Navigation />
+                <a href="/" className="flex items-center">
+                    <span className="self-center text-3xl font-semibold whitespace-nowrap dark:text-[#ffffff]">Xance</span>
+                </a>
+                <div className="block">
+                    <ConnectButton chainStatus="none" showBalance={false} />
+                </div>
+            </div>
+        </nav>
+        <div>{prop.children}</div>
+        </>
     )
 }

@@ -18,6 +18,7 @@ import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
 import { publicProvider } from 'wagmi/providers/public';
 import { json } from 'stream/consumers';
+import TopMenu from '@/components/topMenu';
 
 const { chains, publicClient } = configureChains(
   [bscTestnet],
@@ -52,7 +53,9 @@ export default function RootLayout({
         <WagmiConfig config={wagmiConfig}>
           <RainbowKitProvider chains={chains}>
             <GameProvider>
-              {children}
+              <TopMenu>
+                {children}
+              </TopMenu>
             </GameProvider>
           </RainbowKitProvider>
         </WagmiConfig>

@@ -182,8 +182,7 @@ export default function Home() {
   useEffect(() => {
     getDefaultLottery();
   }, []);
-
-
+  
   return (
     <>
       <div className="lg:overflow-y-scroll">

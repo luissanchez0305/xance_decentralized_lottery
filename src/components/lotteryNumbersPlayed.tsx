@@ -1,22 +1,24 @@
 import { NumberBoughtInterface } from "@/utils/interfaces";
+import { useAccount } from "wagmi";
 
 type Props = {
     numbersBought: NumberBoughtInterface[]
 }
 export default function LotteryNumbersPlayed({numbersBought}: Props) {
+    const { address } = useAccount();
 
     return (
         <div className="relative flex flex-col bg-gradient-to-b from-indigo-500">
             <nav className="flex min-w-[240px] flex-col gap-1 p-2 font-sans text-base font-normal text-blue-gray-700">
                 
                 <div>
-
                     {
-                        numbersBought.length > 0 &&
+                        address && numbersBought.length > 0 &&
                         <h2 className="font-normal">Usted compró estos numeros en este sorteo:</h2>
                     }
                     {
-                        <div className="flex flex-col">
+                        address ?
+                        <div className="flex flex-col py-3">
                             <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
                                 <div className="inline-block min-w-full py-2 sm:px-6 lg:px-8">
                                     <div className="overflow-hidden">
@@ -46,6 +48,8 @@ export default function LotteryNumbersPlayed({numbersBought}: Props) {
                                 </div>
                             </div>
                         </div>
+                        :
+                        <h2 className="font-normal text-center py-3">Conecte su wallet para saber compró números en este sorteo</h2>
                     }
                 </div>
             </nav>

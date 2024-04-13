@@ -60,14 +60,13 @@ export const GameProvider = ({ children }: PropsWithChildren<{}>) => {
         }
     }
 
-    
-
     const isGameExpired = () => {
         const now = new Date().getTime()
         return Number(expiresAt) * 1000 < now
     }
+
     return (
-        <GameContext.Provider value={{ editGameContext, isGameExpired, maxInventoryNumber, numbers, expiresAt, lottery }}>
+        <GameContext.Provider value={{ editGameContext, isGameExpired, maxInventoryNumber, numbers, expiresAt, lottery  }}>
             {children}
         </GameContext.Provider>
     );

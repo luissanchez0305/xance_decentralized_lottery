@@ -16,7 +16,6 @@ export default async function Page({params}: Props) {
     return (
         <main>
           <div className="flex justify-center max-w-md flex-col mx-auto">
-                <TopMenu />
                 <LotteryDetail lottery={lotteryItem}/>
             </div>
         </main>
