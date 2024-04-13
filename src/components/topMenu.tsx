@@ -1,9 +1,11 @@
 import Navigation from "@/components/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { PropsWithChildren } from "react";
 
-export default function TopMenu() {
+export default function TopMenu(prop: PropsWithChildren) {
     return (
-        <nav className="bg-white border-gray-200 bg-gradient-to-b from-[#762b8dda] to-indigo-500">
+        <>
+        <nav className="bg-white border-gray-200 bg-gradient-to-b from-[#762b8dda] to-indigo-500 mx-auto max-w-md justify-center">
             <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
                 <Navigation />
                 <a href="/" className="flex items-center">
@@ -14,5 +16,7 @@ export default function TopMenu() {
                 </div>
             </div>
         </nav>
+        <div>{prop.children}</div>
+        </>
     )
 }
