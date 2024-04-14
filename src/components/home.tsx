@@ -16,7 +16,7 @@ type Number = {
 export default function Home() {
   const router = useRouter();
   const [numbers, setNumbers] = useState<string[]>();
-  const [textDisplay, setTextDisplay] = useState("Loading...")
+  const [textDateDisplay, setTextDateDisplay] = useState("Loading...")
   const [boughtNumbers, setBoughtNumbers] = useState<Number[]>([])
   const [showNumbers, setShowNumbers] = useState(false)
   const [number, setNumber] = useState<number>();
@@ -26,7 +26,7 @@ export default function Home() {
   const { editGameContext, numbers: selected, maxInventoryNumber, isGameExpired, lottery } = useGameContext();
 
   const getDefaultLottery = async () => {
-    const lottery = await fetch(`/api/lottery/`).then(res => res.json())
+    const lottery = await fetch(`/api/lottery/first`).then(res => res.json())
     editGameContext(lottery, "lottery");
   }
   const xanceUrl = () => {
@@ -151,7 +151,8 @@ export default function Home() {
 
   useEffect(() => {
     if(dataExpiresAt){
-      setTextDisplay(new Date(Number(dataExpiresAt) * 1000).toLocaleString());
+      const dataExpiresAtDate = new Date(Number(dataExpiresAt) * 1000);
+      setTextDateDisplay(dataExpiresAtDate.toUTCString());
       editGameContext(dataExpiresAt, "expiresAt")
       if(isGameExpired()){
         editGameContext([], "numbers");
@@ -162,8 +163,9 @@ export default function Home() {
         }
       }
     }
-    if(isErrorExpiresAt)
-        setTextDisplay("Error"); 
+    if(isErrorExpiresAt) {
+      setTextDateDisplay("Error"); 
+    }
   }, [dataExpiresAt, isLoadingExpiresAt, isErrorExpiresAt, dataWinners, address])
 
   useEffect(() => {
@@ -186,7 +188,7 @@ export default function Home() {
   return (
     <>
       <div className="lg:overflow-y-scroll">
-        <Header xanceUrl={xanceUrl()} hash={lottery ? lottery.contractHash : '0x0'} isOpen={true} date={textDisplay} maxInventoryNumber={maxInventoryNumber} />
+        <Header xanceUrl={xanceUrl()} hash={lottery ? lottery.contractHash : '0x0'} isOpen={true} date={textDateDisplay} maxInventoryNumber={maxInventoryNumber} />
         <div className="h-40 grid grid-cols-1 gap-4 content-center xs:gap-8 pt-2 bg-gradient-to-b from-indigo-500">
           <div className="mb-6 mx-auto">
               <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Escoge un número</label>

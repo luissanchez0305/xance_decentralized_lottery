@@ -23,10 +23,8 @@ export default function LotteryDetail({lottery}: Props) {
 
     useEffect(() => {
         if(dataNumbers && address){
-            console.log('dataNumbers', dataNumbers);
             const numbersBought = (dataNumbers as NumberBoughtInterface[]).filter((w: any) => w.addr === address.toString());
             setNumbersBought(numbersBought);
-            console.log('------------numberBought', numbersBought);
         }
       }, [dataNumbers, address]);
 

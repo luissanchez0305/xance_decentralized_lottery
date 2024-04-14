@@ -36,7 +36,6 @@ export default function Numbers() {
             debouncedSelectedNumbers.map((n) => n.qty)
         ],
         onSuccess(data) {
-            // setBoughtWalletOnContract();
         },
     })
     const { data: dataBuy, write: writeBuy } = useContractWrite(configBuy)
@@ -169,7 +168,18 @@ export default function Numbers() {
     useEffect(() => {
         if (isSuccessBuy) {
             refetchBalance()
-            setSteps(2)
+            setSteps(2);
+            fetch('/api/lottery/played', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lottery_id: lottery?.id,
+                    address: address,
+                }),
+            });
         }
     }, [isSuccessBuy])
 

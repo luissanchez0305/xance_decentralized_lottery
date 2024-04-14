@@ -6,6 +6,7 @@
 // global scope, and execute the script.
 const { ethers } = require("hardhat");
 const fs = require('fs');
+const { count } = require("console");
 
 async function main() {
   const [owner, walletPrize] = await ethers.getSigners();
@@ -47,7 +48,7 @@ async function main() {
   }
 
   console.log(`Token deployed to ${token.target}`);
-  const date = '2024-03-26T01:55:00Z';
+  const date = '2024-04-15T01:55:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   
@@ -62,6 +63,20 @@ async function main() {
   const data = {
     address: xance.target,
   };
+
+  await fetch('http://localhost:3000/api/lottery', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contractHash: xance.target,
+      tokenHash: token.target,
+      lotteryDate: date,
+      country: 'Colombia',
+    })
+  });
 
   const jsonData = JSON.stringify(data);
 

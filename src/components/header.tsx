@@ -23,9 +23,9 @@ export default function Header({hash, date, xanceUrl, maxInventoryNumber, isOpen
             <p className="text-sm">Costo por número: $0.25</p>
           </div> : <div className="flex flex-col"></div>}
 
-          <div className="flex flex-col">
+          <div className="flex flex-col text-right">
             <p className="text-2l font-bold">Fecha de sorteo</p>
-            <p className="text-sm">{typeof date === 'string' ? date : formatDate(date)}</p>
+            <p className="text-sm">{formatDate(date)}</p>
           </div>
         </div>
         </>

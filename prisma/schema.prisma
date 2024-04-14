@@ -17,7 +17,7 @@ model lottery {
   id            Int       @id @default(autoincrement())
   contractHash  String    @unique
   tokenHash     String
-  createdDate   DateTime
+  createdDate   DateTime  @default(now())
   lotteryDate   DateTime
   country       String
   players       lottery_players[]
@@ -26,7 +26,7 @@ model lottery {
 model lottery_players {
   id            Int       @id @default(autoincrement())
   playerWallet  String
-  date          DateTime
+  date          DateTime  @default(now())
   lotteryPlayed lottery   @relation(fields: [lottery_id], references: [id])
   lottery_id    Int
 }

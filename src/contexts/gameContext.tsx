@@ -61,7 +61,7 @@ export const GameProvider = ({ children }: PropsWithChildren<{}>) => {
     }
 
     const isGameExpired = () => {
-        const now = new Date().getTime()
+        const now = new Date().getTime();
         return Number(expiresAt) * 1000 < now
     }
 

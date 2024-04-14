@@ -30,7 +30,7 @@ module.exports = {
       gasPrice: 'auto',
     },
     binanceTest: {
-      url: `https://data-seed-prebsc-1-s1.bnbchain.org:8545`,
+      url: `https://data-seed-prebsc-2-s1.bnbchain.org:8545`,
       accounts: [
         `0x${ownerPK}`, `0x${accocunt1}`,
         `0x${accocunt6}`,
@@ -41,7 +41,7 @@ module.exports = {
         `0x${participant5}`, */
       ],
       gas: 'auto',
-      gasPrice: 10000000000,
+      gasPrice: 'auto',
     },
     binance: {
       url: `https://bsc-dataseed.binance.org`,

@@ -1,5 +1,4 @@
 import Home from '@/components/home'
-import TopMenu from '@/components/topMenu'
 
 export default async function Index() {
 

@@ -1,5 +1,4 @@
 import LotteryDetail from '@/components/lotteryDetail';
-import TopMenu from '@/components/topMenu';
 import { prisma } from '../../../../db/prisma';
 
 type Props = {
