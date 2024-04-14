@@ -16,6 +16,7 @@ const POST = async (
     const played = await prisma.lottery_players.findMany({
       where: {
         playerWallet: address,
+        lottery_id: lottery_id,
       },
     });
 

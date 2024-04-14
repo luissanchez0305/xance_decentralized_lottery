@@ -25,7 +25,7 @@ export default function Lotteries({ connected }: Props) {
             country: string;
         }[] = await fetch(`/api/lotteries/`).then(res => res.json())
         
-        setFutureLotteries(data.filter((lottery: any) => lottery.lotteryDate > new Date()));
+        setFutureLotteries(data.filter((lottery: any) => new Date(lottery.lotteryDate)> new Date()));
         if(connected) {
             data = await fetch(`/api/lotteries/${address}`).then(res => res.json())
             setPastLotteries(data);
