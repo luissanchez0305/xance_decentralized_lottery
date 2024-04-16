@@ -2,9 +2,9 @@ import { NumberBoughtInterface } from "@/utils/interfaces";
 import { useAccount } from "wagmi";
 
 type Props = {
-    numbersBought: NumberBoughtInterface[]
+    addresBoughtNumbers: NumberBoughtInterface[]
 }
-export default function LotteryNumbersPlayed({numbersBought}: Props) {
+export default function LotteryNumbersPlayed({addresBoughtNumbers}: Props) {
     const { address } = useAccount();
 
     return (
@@ -13,7 +13,7 @@ export default function LotteryNumbersPlayed({numbersBought}: Props) {
                 
                 <div>
                     {
-                        address && numbersBought.length > 0 &&
+                        address && addresBoughtNumbers.length > 0 &&
                         <h2 className="font-normal">Usted compró estos numeros en este sorteo:</h2>
                     }
                     {
@@ -33,8 +33,8 @@ export default function LotteryNumbersPlayed({numbersBought}: Props) {
                                             </thead>
                                             <tbody>
                                             {
-                                                numbersBought.length > 0 ?
-                                                numbersBought.map((item, id) => (              
+                                                addresBoughtNumbers.length > 0 ?
+                                                addresBoughtNumbers.map((item, id) => (              
                                                     <tr key={id} className="border-b border-neutral-200 dark:border-white/10">
                                                         <td className="whitespace-nowrap px-6 py-4 font-medium">{item.number}</td>
                                                         <td className="whitespace-nowrap px-6 py-4">{item.qty}</td>
@@ -49,7 +49,7 @@ export default function LotteryNumbersPlayed({numbersBought}: Props) {
                             </div>
                         </div>
                         :
-                        <h2 className="font-normal text-center py-3">Conecte su wallet para saber compró números en este sorteo</h2>
+                        <h1 className="font-normal text-center py-3 text-3xl">Conecte su wallet para comprar números en este sorteo</h1>
                     }
                 </div>
             </nav>

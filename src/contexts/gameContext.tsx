@@ -1,16 +1,13 @@
 'use client'
+import { NumberType } from "@/utils/types";
 import { lottery as _lottery } from "@prisma/client";
 import { createContext, PropsWithChildren, useContext, useState } from "react";
 
-type Number = {
-    value: string,
-    qty: number
-  }
-
 type GameContextType = {
-    numbers: Number[],
+    numbers: NumberType[],
     maxInventoryNumber: number,
     expiresAt: number,
+    total: number,
     lottery: _lottery | undefined,
     isGameExpired: () => boolean,
     editGameContext: (data: any, typeOfUpdate: String) => void;
@@ -20,6 +17,7 @@ const initalState: GameContextType = {
     numbers: [],
     maxInventoryNumber: 0,
     expiresAt: 0,
+    total: 0,
     lottery: {
         id: 0,
         contractHash: process.env.NEXT_PUBLIC_XANCE_CONTRACT_ADDRESS ?? '0x0',
@@ -37,9 +35,10 @@ export const useGameContext = () => useContext(GameContext);
 
 export const GameProvider = ({ children }: PropsWithChildren<{}>) => {
     const [lottery, setLottery] = useState<_lottery>();
-    const [numbers, setNumbers] = useState<Number[]>([]);
+    const [numbers, setNumbers] = useState<NumberType[]>([]);
     const [expiresAt, setExpiresAt] = useState(0);
     const [maxInventoryNumber, setMaxInventoryNumber] = useState(0);
+    const [total, setTotal] = useState(0)
 
     const editGameContext = (data: any, type: String) => {
         switch (type) {
@@ -55,6 +54,9 @@ export const GameProvider = ({ children }: PropsWithChildren<{}>) => {
             case 'lottery':
                 setLottery(data);
                 break;
+            case 'total':
+                setTotal(data);
+                break;
             default:
                 break;
         }
@@ -66,7 +68,7 @@ export const GameProvider = ({ children }: PropsWithChildren<{}>) => {
     }
 
     return (
-        <GameContext.Provider value={{ editGameContext, isGameExpired, maxInventoryNumber, numbers, expiresAt, lottery  }}>
+        <GameContext.Provider value={{ editGameContext, isGameExpired, maxInventoryNumber, numbers, expiresAt, lottery, total }}>
             {children}
         </GameContext.Provider>
     );

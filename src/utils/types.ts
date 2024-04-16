@@ -6,3 +6,8 @@ export type lotteryType = {
     lotteryDate: Date;
     country: string;
   }
+
+export type NumberType = {
+  value: string,
+  qty: number
+}
