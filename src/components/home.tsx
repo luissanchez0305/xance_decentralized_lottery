@@ -26,9 +26,12 @@ export default function Home() {
   const { editGameContext, numbers: selected, maxInventoryNumber, isGameExpired, lottery } = useGameContext();
 
   const getDefaultLottery = async () => {
-    const lottery = await fetch(`/api/lottery/first`).then(res => res.json())
-    editGameContext(lottery, "lottery");
+    if(!lottery){
+      const lottery = await fetch(`/api/lottery/first`).then(res => res.json())
+      editGameContext(lottery, "lottery");
+    }
   }
+
   const xanceUrl = () => {
     return `${process.env.NEXT_PUBLIC_SCAN_URL}${lottery?.contractHash}`;
   }
@@ -47,7 +50,7 @@ export default function Home() {
     const bougthQty = boughtNumbers.find((b) => b.value == n);
     const selectedQty = totalSelected.find((b) => b.value == n)!;
     
-    if(bougthQty && bougthQty.qty + selectedQty.qty >= maxInventoryNumber){
+    if(bougthQty && bougthQty.qty + selectedQty.qty > maxInventoryNumber){
       alert(`Solo quedan ${maxInventoryNumber - bougthQty.qty - 1} números disponibles`)
       return
     }
@@ -188,7 +191,13 @@ export default function Home() {
   return (
     <>
       <div className="lg:overflow-y-scroll">
-        <Header xanceUrl={xanceUrl()} hash={lottery ? lottery.contractHash : '0x0'} isOpen={true} date={textDateDisplay} maxInventoryNumber={maxInventoryNumber} />
+        <Header xanceUrl={
+          xanceUrl()} 
+          hash={lottery ? lottery.contractHash : '0x0'} 
+          isOpen={true} 
+          date={textDateDisplay} 
+          maxInventoryNumber={maxInventoryNumber} 
+        />
         <div className="h-40 grid grid-cols-1 gap-4 content-center xs:gap-8 pt-2 bg-gradient-to-b from-indigo-500">
           <div className="mb-6 mx-auto">
               <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Escoge un número</label>
@@ -248,18 +257,18 @@ export default function Home() {
           )
         )}
       </div>
-      <div className="flex flex-row justify-between mt-10 w-full">
+      <div className="flex flex-row justify-between mt-10 w-full text-white">
         {
           isLoadingExpiresAt || isLoadingNumbers || isLoadingMaxInventoryNum ? 
             "Loading..." : 
               isErrorExpiresAt || isErrorNumbers || isErrorMaxInventoryNum ? "Error" : isGameExpired() ? (isWinner ? 
                 (isSuccessClaim ? 
-                  <label className="mr-3 w-full text-end" style={{color: "black"}}>
+                  <label className="mr-3 w-full text-end">
                     Tu Premio ha sido depositado. FELICIDADES!!
                   </label> : <button onClick={() => writeClaim?.()} className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
                   { isLoadingClaim ? "Reclamando..." : "Reclamar Premio" }
                 </button>) : 
-                <label className="mr-2 m-auto text-end" style={{color: "black"}}>
+                <label className="mr-2 m-auto text-end">
                   Sorteo Expirado
                 </label>) : (
               <div className="mr-3 w-full text-end">

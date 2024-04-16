@@ -125,15 +125,6 @@ export default function Numbers() {
       hash: dataToken?.hash,
     })
 
-    const setBoughtWalletOnContract = async () => {
-        const lotteries = await prisma.lottery_players.findMany({
-            where: {
-                playerWallet: address,
-                lottery_id: 4
-            }
-        });
-    }
-
     useEffect(() => {
         if(isGameExpired()){
             router.push('/')
@@ -226,7 +217,7 @@ export default function Numbers() {
             <div>
                 Total <Link href="/numbers">{total.toFixed(2)} USD</Link>
             </div>
-            <div className="lg:grid-cols-10 gap-6 overflow-y-scroll bg-white absolute inset-x-0 bottom-0 text-end">
+            <div className="flex flex-row justify-between mt-10 w-full text-white text-right">
                     {
                         (!connector) ? 
                         <label className="mr-3" style={{color: "black"}}>Conectar el wallet</label>

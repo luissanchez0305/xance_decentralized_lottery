@@ -1,5 +1,6 @@
 import { formatDate, shortenHash } from "@/utils/helper";
 import { format } from "path";
+import GoToBuyButton from "./goToBuyButton";
 
 type Props = {
     hash: string;
@@ -18,10 +19,19 @@ export default function Header({hash, date, xanceUrl, maxInventoryNumber, isOpen
           </div>
         </div>
         <div className="flex flex-row justify-between bg-indigo-500 px-2 pt-3">
-            {isOpen ? <div className="flex flex-col">
-            <p className="text-2l font-bold">{`Escoge mínimo ${maxInventoryNumber < 10 ? maxInventoryNumber : 10} números`}</p>
-            <p className="text-sm">Costo por número: $0.25</p>
-          </div> : <div className="flex flex-col"></div>}
+            {
+              isOpen && maxInventoryNumber > 0 ? 
+                <div className="flex flex-col">
+                  <p className="text-2l font-bold">{`Escoge mínimo ${maxInventoryNumber < 10 ? maxInventoryNumber : 10} números`}</p>
+                  <p className="text-sm">Costo por número: $0.25</p>
+                </div> : 
+              isOpen ?
+              <div className="flex flex-col">
+                <GoToBuyButton hash={hash} />
+              </div>
+              :
+              <div className="flex flex-col"></div>
+            }
 
           <div className="flex flex-col text-right">
             <p className="text-2l font-bold">Fecha de sorteo</p>

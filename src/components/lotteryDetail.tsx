@@ -13,7 +13,7 @@ type Props = {
 
 export default function LotteryDetail({lottery}: Props) {
     const { address } = useAccount();
-    const [ numbersBought, setNumbersBought ] = useState<NumberBoughtInterface[]>([]);
+    const [ boughtNumbers, setBoughtNumbers ] = useState<NumberBoughtInterface[]>([]);
 
     const { data: dataNumbers, isError: isErrorNumbers, isLoading: isLoadingNumbers } = useContractRead({
         address: lottery.contractHash as `0x${string}`,
@@ -24,9 +24,9 @@ export default function LotteryDetail({lottery}: Props) {
     useEffect(() => {
         if(dataNumbers && address){
             const numbersBought = (dataNumbers as NumberBoughtInterface[]).filter((w: any) => w.addr === address.toString());
-            setNumbersBought(numbersBought);
+            setBoughtNumbers(numbersBought);
         }
-      }, [dataNumbers, address]);
+    }, [dataNumbers, address]);
 
     return (
         <>
@@ -42,7 +42,7 @@ export default function LotteryDetail({lottery}: Props) {
                     />
                 }
             </div>
-            <LotteryNumbersPlayed numbersBought={numbersBought}/>
+            <LotteryNumbersPlayed boughtNumbers={boughtNumbers}/>
        </>    
     )
 }
