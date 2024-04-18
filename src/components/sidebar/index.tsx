@@ -53,7 +53,7 @@ const Sidebar = (): JSX.Element => {
           </svg>
         </button>  
       </div>
-      <div className="w-[43%] h-[23vh] bg-[#e7e7ff] fixed transition-[0.6s] z-[1000] text-[#474545] rounded-b-xl rounded-bl-xl shadow-2xl ml-7" style={{
+      <div className="w-[300px] h-[23vh] bg-[#e7e7ff] fixed transition-[0.6s] z-[1000] text-[#474545] rounded-b-xl rounded-bl-xl shadow-2xl ml-16" style={{
         top: isOpen ? '-100%' : '0'
       }}>
         <h1 className=" text-[24px] text-center">Menu</h1>
