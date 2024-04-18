@@ -35,7 +35,7 @@ export default function Header({hash, date, xanceUrl, maxInventoryNumber, isOpen
 
           <div className="flex flex-col text-right">
             <p className="text-2l font-bold">Fecha de sorteo</p>
-            <p className="text-sm">{formatDate(date)}</p>
+            <p className="text-sm">{formatDate(date)}GMT</p>
           </div>
         </div>
         </>

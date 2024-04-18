@@ -22,7 +22,7 @@ export default function LotteryItem({hash, date, id}: Props) {
                     {shortenHash(hash)}
                 </h6>
                 <p className="block font-sans text-sm antialiased font-normal leading-normal text-gray-400">
-                    {formatDate(date)}
+                    {formatDate(date)}GMT
                 </p>
             </div>
         </button>
