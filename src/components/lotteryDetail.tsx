@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useAccount, useContractRead } from 'wagmi';
 import xance from "../abi/Xance.json"
 import { NumberBoughtInterface } from '@/utils/interfaces';
+import { useGameContext } from '@/contexts/gameContext';
 
 type Props = {
     lottery: any
@@ -14,14 +15,17 @@ type Props = {
 export default function LotteryDetail({lottery}: Props) {
     const { address } = useAccount();
     const [ boughtNumbers, setBoughtNumbers ] = useState<NumberBoughtInterface[]>([]);
+    const { editGameContext } = useGameContext();
+    const [isWinner, setIsWinner] = useState(false)
 
     const { data: dataNumbers, isError: isErrorNumbers, isLoading: isLoadingNumbers } = useContractRead({
         address: lottery.contractHash as `0x${string}`,
         abi: xance.abi,
         functionName: 'getAllSoldNumbers',
-      })
+    })
 
     useEffect(() => {
+        editGameContext(lottery, 'lottery');
         if(dataNumbers && address){
             const numbersBought = (dataNumbers as NumberBoughtInterface[]).filter((w: any) => w.addr === address.toString());
             setBoughtNumbers(numbersBought);

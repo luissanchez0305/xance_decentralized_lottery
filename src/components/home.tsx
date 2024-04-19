@@ -7,6 +7,8 @@ import xance from "../abi/Xance.json"
 import Header from './header'
 import { lottery as _lottery } from "@prisma/client";
 import { lotteryType } from '@/utils/types'
+import WinnerButton from './winnerButton'
+import { isUserWinner } from '@/utils/helper'
 
 type Number = {
   value: string,
@@ -159,10 +161,8 @@ export default function Home() {
       editGameContext(dataExpiresAt, "expiresAt")
       if(isGameExpired()){
         editGameContext([], "numbers");
-        if(address && !isErrorWinners && dataWinners) {
-          if((dataWinners as []).map((v: any) => v.map((w: any) => w.addr).includes(address.toString())).includes(true)){
-            setIsWinner(true)
-          }
+        if(!isErrorWinners) {
+          setIsWinner(isUserWinner(address, dataWinners as []))
         }
       }
     }
@@ -262,12 +262,7 @@ export default function Home() {
           isLoadingExpiresAt || isLoadingNumbers || isLoadingMaxInventoryNum ? 
             "Loading..." : 
               isErrorExpiresAt || isErrorNumbers || isErrorMaxInventoryNum ? "Error" : isGameExpired() ? (isWinner ? 
-                (isSuccessClaim ? 
-                  <label className="mr-3 w-full text-end">
-                    Tu Premio ha sido depositado. FELICIDADES!!
-                  </label> : <button onClick={() => writeClaim?.()} className="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
-                  { isLoadingClaim ? "Reclamando..." : "Reclamar Premio" }
-                </button>) : 
+                <WinnerButton /> : 
                 <label className="mr-2 m-auto text-end">
                   Sorteo Expirado
                 </label>) : (
