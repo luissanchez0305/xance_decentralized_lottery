@@ -12,9 +12,9 @@ async function main() {
   const [owner, walletPrize] = await ethers.getSigners();
   console.log('Deploying contracts with the account:', owner.address);
 
-  const network = 'binance';
+  const network = 'binance_test';
   const weiAmount = (await ethers.provider.getBalance(owner.address)).toString();
-  console.log(`Account balances: ${ethers.formatEther(weiAmount)} ${network === 'binance' ? 'BNB' : 'ETH'}`);
+  console.log(`Account balances: ${ethers.formatEther(weiAmount)} ${network === 'binance_test' ? 'BNB' : 'ETH'}`);
 
   let token;
   if(!fs.existsSync(`scripts/testnet/deployed/${network}/token.json`)) {
@@ -48,7 +48,7 @@ async function main() {
   }
 
   console.log(`Token deployed to ${token.target}`);
-  const date = '2024-04-18T01:55:00Z';
+  const date = '2024-04-29T00:30:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   
@@ -64,7 +64,7 @@ async function main() {
     address: xance.target,
   };
 
-  await fetch('http://localhost:3000/api/lottery', {
+  await fetch(`${process.env.API_URL}api/lottery`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',

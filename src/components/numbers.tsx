@@ -15,6 +15,7 @@ import { ethers } from "ethers"
 import xance from "../abi/Xance.json"
 import { useRouter } from 'next/navigation';
 import { prisma } from '../../db/prisma';
+import { shortenHash } from '@/utils/helper';
 
 export default function Numbers() {
     const router = useRouter();
@@ -171,12 +172,17 @@ export default function Numbers() {
                     address: address,
                 }),
             });
+            var text = `🎉Compra satisfactoria🎉\n${shortenHash(address as `0x${string}`)} ha comprado ${debouncedSelectedNumbers.reduce((sum, current) => sum + current.qty, 0)} billetes en el sorteo ${shortenHash(lottery?.contractHash as `0x${string}`)}.\n MUCHA SUERTE!`;
+            fetch(`https://api.telegram.org/bot${process.env.NEXT_PUBLIC_TELEGRAM_TOKEN}/sendMessage?chat_id=${process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID}&text=${text}&parse_mode=html&disable_web_page_preview=1`,
+            {
+                method: 'GET',
+            });
         }
     }, [isSuccessBuy])
 
     return (
         <>
-            <div className="grid grid-cols-5 lg:grid-cols-10 gap-6 overflow-y-scroll py-7 bg-gradient-to-b from-indigo-500">
+            <div className="grid grid-cols-5 gap-6 overflow-y-scroll py-7 bg-gradient-to-b from-indigo-500">
                 {
                     selected.map((v,i)=>(
                         <div key={i} className="grid grid-cols-2" >

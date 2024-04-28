@@ -1,3 +1,4 @@
+import { useGameContext } from "@/contexts/gameContext";
 import { NumberBoughtInterface } from "@/utils/interfaces";
 import { useAccount } from "wagmi";
 
@@ -6,6 +7,7 @@ type Props = {
 }
 export default function LotteryNumbersPlayed({boughtNumbers}: Props) {
     const { address } = useAccount();
+    const { isGameExpired } = useGameContext();
 
     return (
         <div className="relative flex flex-col bg-gradient-to-b from-indigo-500">
@@ -49,7 +51,7 @@ export default function LotteryNumbersPlayed({boughtNumbers}: Props) {
                             </div>
                         </div>
                         :
-                        <h2 className="font-normal text-center py-3 text-2xl">Conecte su wallet para comprar números en este sorteo</h2>
+                        isGameExpired() ? null : <h2 className="font-normal text-center py-3 text-2xl">Conecte su wallet para comprar números en este sorteo</h2>
                     }
                 </div>
             </nav>

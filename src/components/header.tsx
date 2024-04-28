@@ -9,8 +9,9 @@ type Props = {
     isOpen: boolean;
     maxInventoryNumber: number;
     xanceUrl: string;
+    winningNumbers?: number[]
 }
-export default function Header({hash, date, xanceUrl, maxInventoryNumber, isOpen}: Props) {
+export default function Header({hash, date, xanceUrl, maxInventoryNumber, isOpen, winningNumbers}: Props) {
     return (
         <>
         <div className="flex flex-row justify-between bg-indigo-500 px-2 pt-3">
@@ -40,6 +41,22 @@ export default function Header({hash, date, xanceUrl, maxInventoryNumber, isOpen
             <p className="text-2l font-bold">Fecha de sorteo</p>
             <p className="text-sm">{formatDate(date)}GMT</p>
           </div>
+        </div>
+        <div className="text-center py-4 bg-indigo-500">
+          { 
+            winningNumbers ?
+            winningNumbers.length ? 
+            <>
+              <p className="text-2xl font-bold">Números ganadores</p>
+              <div className="grid grid-cols-3">
+                <p className="text-2l font-bold">{winningNumbers[0]}</p>
+                <p className="text-2l font-bold">{winningNumbers[1]}</p>
+                <p className="text-2l font-bold">{winningNumbers[2]}</p>
+              </div>
+            </> : 
+              <p className="text-2xl font-bold bg-transparent">Este sorteo aún no tiene números ganadores</p>
+            : null
+            }
         </div>
         </>
     )

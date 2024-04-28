@@ -17,11 +17,33 @@ export default function LotteryDetail({lottery}: Props) {
     const [ boughtNumbers, setBoughtNumbers ] = useState<NumberBoughtInterface[]>([]);
     const { editGameContext } = useGameContext();
     const [isWinner, setIsWinner] = useState(false)
+    const [ winningNumbers, setWinningNumbers ] = useState<number[]>([])
 
     const { data: dataNumbers, isError: isErrorNumbers, isLoading: isLoadingNumbers } = useContractRead({
         address: lottery.contractHash as `0x${string}`,
         abi: xance.abi,
         functionName: 'getAllSoldNumbers',
+    })
+
+    const { data: dataPrizes1, isError: isErrordrizes1, isLoading: isLoadingPrizes1 } = useContractRead({
+        address: lottery.contractHash as `0x${string}`,
+        abi: xance.abi,
+        functionName: 'prizes',
+        args: [1]
+    })
+
+    const { data: dataPrizes2, isError: isErrordrizes2, isLoading: isLoadingPrizes2 } = useContractRead({
+        address: lottery.contractHash as `0x${string}`,
+        abi: xance.abi,
+        functionName: 'prizes',
+        args: [2]
+    })
+
+    const { data: dataPrizes3, isError: isErrordrizes3, isLoading: isLoadingPrizes3 } = useContractRead({
+        address: lottery.contractHash as `0x${string}`,
+        abi: xance.abi,
+        functionName: 'prizes',
+        args: [3]
     })
 
     useEffect(() => {
@@ -31,6 +53,13 @@ export default function LotteryDetail({lottery}: Props) {
             setBoughtNumbers(numbersBought);
         }
     }, [dataNumbers, address]);
+
+    useEffect(() => {
+        if(dataPrizes1 && dataPrizes2 && dataPrizes3){
+            console.log('dataPrizes', dataPrizes1, dataPrizes2, dataPrizes3);
+            setWinningNumbers([Number(dataPrizes1), Number(dataPrizes2), Number(dataPrizes3)])
+        }
+    }, [dataPrizes1, dataPrizes2, dataPrizes3]);
 
     return (
         <>
@@ -43,6 +72,7 @@ export default function LotteryDetail({lottery}: Props) {
                         isOpen={lottery.lotteryDate > new Date()}
                         date={formatDate(lottery.lotteryDate)}
                         maxInventoryNumber={0}
+                        winningNumbers={winningNumbers}
                     />
                 }
             </div>

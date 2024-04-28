@@ -56,5 +56,11 @@ module.exports = {
       gas: 'auto',
       gasPrice: 'auto',
     },
+    solanaTest: {
+      url: `https://api.testnet.solana.com`,
+      accounts: [`0x${ownerPK}`],
+      gas: 'auto',
+      gasPrice: 'auto',
+    }
   },
 };

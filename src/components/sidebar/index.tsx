@@ -5,20 +5,15 @@ import { useEffect, useState } from "react";
 const Sidebar = (): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => {
-    console.log('toggle is open', isOpen);
     setIsOpen(!isOpen);
   };
-
-  useEffect(() => {
-    console.log('is open', isOpen);
-  }, [])
 
   return (
     <div className="flex flex-col w-full">
       <div
         className="fixed top-0 bg-transparent mx-auto"
         style={{
-          opacity: `${isOpen ? "1" : "0"}`,
+          opacity: `${isOpen ? "0" : "1"}`,
           alignSelf: 'center',
         }}
       >
@@ -53,8 +48,9 @@ const Sidebar = (): JSX.Element => {
           </svg>
         </button>  
       </div>
-      <div className="w-[300px] h-[23vh] bg-[#e7e7ff] fixed transition-[0.6s] z-[1000] text-[#474545] rounded-b-xl rounded-bl-xl shadow-2xl ml-16" style={{
-        top: isOpen ? '-100%' : '0'
+      <div className="w-[300px] h-[23vh] bg-[#e7e7ff] fixed transition-[0.6s] z-[1000] text-[#474545] rounded-b-xl rounded-bl-xl shadow-2xl ml-16" 
+      style={{
+        top: isOpen ? '0' : '-100%'
       }}>
         <h1 className=" text-[24px] text-center">Menu</h1>
         <li className="list-none flex items-center content-start w-full pt-3 px-0">
