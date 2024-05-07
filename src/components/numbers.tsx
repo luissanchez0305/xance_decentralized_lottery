@@ -16,6 +16,8 @@ import xance from "../abi/Xance.json"
 import { useRouter } from 'next/navigation';
 import { prisma } from '../../db/prisma';
 import { shortenHash } from '@/utils/helper';
+import { useWindowSize } from 'usehooks-ts'
+import Confetti from 'react-confetti'
 
 export default function Numbers() {
     const router = useRouter();
@@ -24,6 +26,8 @@ export default function Numbers() {
     const { numbers: selected, isGameExpired, lottery } = useGameContext();
     const debouncedSelectedNumbers = useDebounce(selected, 500)
     const { address, connector } = useAccount();
+    const [showConfetti, setShowConfetti] = useState(false);
+    const { width, height } = useWindowSize()
     const { config: configBuy,
         error: prepareErrorBuy,
         isError: isPrepareErrorBuy, 
@@ -160,6 +164,7 @@ export default function Numbers() {
     useEffect(() => {
         if (isSuccessBuy) {
             refetchBalance()
+            setShowConfetti(true);
             setSteps(2);
             fetch('/api/lottery/played', {
                 method: 'POST',
@@ -235,11 +240,11 @@ export default function Numbers() {
                             ) ?
                             (!writeBuy && steps === 0) ? (
                                 <button disabled={!writeToken} onClick={() => writeToken?.()} className="mr-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
-                                    {isLoadingToken ? 'Aprobando...' : 'Comprar 1er paso: Aprobar'}
+                                    {isLoadingToken ? 'Aprobando...' : 'Comprar 1er paso de 2: Aprobar'}
                                 </button>
                             ) : ((steps === 1) ? (
                                     <button onClick={() => writeBuy?.()} className="mr-3 py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 ">
-                                        {isLoadingBuy ? 'Pagando...' : 'Comprar 2do paso: Pagar'}
+                                        {isLoadingBuy ? 'Pagando...' : 'Comprar 2do paso de 2: Pagar'}
                                     </button>
                             ) : (
                                 <>
@@ -250,6 +255,13 @@ export default function Numbers() {
                         )
                     }
             </div>
+            {
+                showConfetti ? 
+                <Confetti
+                    width={width}
+                    height={height}
+                /> : null
+            }
             {(isPrepareErrorBuy || isErrorBuy) && (
                 (prepareErrorBuy || errorBuy)?.message.includes('have enough USD') ? 
                     <div>Error: No cuentas con suficiente saldo</div> : 

@@ -21,7 +21,7 @@ import { json } from 'stream/consumers';
 import TopMenu from '@/components/topMenu';
 
 const { chains, publicClient } = configureChains(
-  [bscTestnet],
+  [bsc],
   [
     alchemyProvider({ apiKey: process.env.NEXT_PUBLIC_ALCHEMY_ID! }),
     publicProvider()

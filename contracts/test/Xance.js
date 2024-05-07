@@ -91,9 +91,11 @@ describe("Xance", function () {
             await xance.connect(account5).buy([5,5], [1,3]);
 
             await time.increaseTo(expireTime + 1);
-            await xance.connect(owner).setPrizeNumbers([1010, 1034, 1005]);
+            await xance.connect(owner).setPrizeNumbers([1010, 1034, 1008]);
             
+            await xance.connect(owner).withdraw();
             await xance.connect(account3).claim();
+            await xance.connect(account4).claim();
             const finalBalance = await token.balanceOf(account3.address);
             /*
             --account3--
@@ -123,7 +125,7 @@ describe("Xance", function () {
             await token.connect(account3).approve(xance.target, oneToken * 10n);
             await token.connect(account4).approve(xance.target, oneToken * 10n);
             await token.connect(account5).approve(xance.target, oneToken * 10n);
-            
+
             await xance.connect(account1).buy([1], [1]);
             await xance.connect(account2).buy([2], [6]);
             await xance.connect(account3).buy([3,10], [6,8]);
@@ -131,46 +133,44 @@ describe("Xance", function () {
             await xance.connect(account5).buy([5,5], [1,3]);
             
             await time.increaseTo(expireTime + 1);
-            await xance.connect(owner).setPrizeNumbers([1010, 1034, 1005]);
+            await xance.connect(owner).setPrizeNumbers([1010, 1010, 1003]);
             
             await xance.connect(owner).withdraw();
+
             const finalBalance = await token.balanceOf(xance.target);
+            expect(finalBalance.toString()).to.equal('180000000000000000000');
             /*
             --account3--
             balance inicial 10
-            compra de 8 numero 10 = 8 * 0.25 = 2
-            compra de 6 numero 3 = 6 * 0.25 = 1.5
+            * compra 6 del numero 3 = 6 * 0.25 = 1.5
+            * compra 8 del numero 10 = 8 * 0.25 = 2
             Total de compra 3.5
             balance 6.5
+            numero ganador 1003 segundo premio
+            6 numeros 3 = 6 * 2 = 12
             numero ganador 1010 primer premio
             8 numeros 10 = 8 * 14 = 112
-            balance final 118.5
-
+            balance final 124
 
             --account4--
             balance inicial 10
-            compra de 5 numero 4 = 5 * 0.25 = 1.25
-            compra de 4 numero 10 = 4 * 0.25 = 1
+            compra 5 del numero 4 = 5 * 0.25 = 1.25
+            * compra 4 del numero 10 = 4 * 0.25 = 1
             Total de compra 2.25
-            balance 7.75
             numero ganador 1010 primer premio
             4 numeros 10 = 4 * 14 = 56
-            balance final 63.75
+            balance 7.75
 
             --account5--
             balance inicial 10
-            compra de 4 numero 5 = 1 * 0.25 = 1
+            compra 4 del numero 5 = 1 * 0.25 = 1
             total de compra 1
             balance 9
-            numero ganador 1005 tercer premio
-            4 numeros 5 = 4 * 2 = 8
-            balance final 17
 
             balance del contrato 500
-            total en premios 112 + 56 + 8 = 176
-            balance a retirar 500 - 176 = 324
+            total en premios 12 + 113 + 56 = 180
+            balance a retirar 500 - 180 = 320
             */
-            expect(finalBalance.toString()).to.equal('176000000000000000000');
         });
     });
 

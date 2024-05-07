@@ -162,22 +162,63 @@ contract Xance is Ownable {
         emit Buy(msg.sender, numbers, qtys);
     }
 
-    function claim() public isExpired isLotteryActive {
+    function getPrizeNumbers() private view returns(uint8, uint8, uint8) {        
         require(prizes[1] > 0, "Winning numbers are not set");
-
+        
         uint8 fpNumber = uint8(prizes[1] % 100);
         uint8 spNumber = uint8(prizes[2] % 100);
         uint8 tpNumber = uint8(prizes[3] % 100);
 
+        return (fpNumber, spNumber, tpNumber);
+    }
+
+    function claimAmount() public view isExpired isLotteryActive returns (uint256, uint8, uint8, uint8, uint8, uint8, uint8) {
+        require(prizes[1] > 0, "Winning numbers are not set");
+
+        (uint8 fpNumber, uint8 spNumber, uint8 tpNumber) = getPrizeNumbers();
+ 
         uint8 fpPosition = getPosition(fpNumber);
         uint8 spPosition = getPosition(spNumber);
         uint8 tpPosition = getPosition(tpNumber);
 
         require(fpPosition > 0 || spPosition > 0 || tpPosition > 0, "You don't have a winning number");
+        
+        uint256 amount = 0;
+        if(fpNumber != spNumber && fpNumber != tpNumber && spNumber != tpNumber){
+            amount = calculatePrizeAmount(1, fpPosition, fpNumber) + 
+                        calculatePrizeAmount(2, spPosition, spNumber) + 
+                        calculatePrizeAmount(3, tpPosition, tpNumber);
+        } else if(fpNumber == spNumber) {
+            amount = calculatePrizeAmount(1, fpPosition, fpNumber) + 
+                        calculatePrizeAmount(3, tpPosition, tpNumber);
+        } else if(fpNumber == tpNumber || spNumber == tpNumber) {
+            amount = calculatePrizeAmount(1, fpPosition, fpNumber) + 
+                        calculatePrizeAmount(2, spPosition, spNumber);
+        }
+        
+        return (amount, fpNumber, fpPosition, spNumber, spPosition, tpNumber, tpPosition);
+    }
 
-        uint256 amount = calculateAndDelete(1, fpPosition, fpNumber) +
-                        calculateAndDelete(2, spPosition, spNumber) +
-                        calculateAndDelete(3, tpPosition, tpNumber);
+    function claim() public isExpired isLotteryActive {
+        (uint256 amount, 
+        uint8 fpNumber,
+        uint8 fpPosition,
+        uint8 spNumber,
+        uint8 spPosition,
+        uint8 tpNumber,
+        uint8 tpPosition) = claimAmount();
+
+        if(fpNumber != spNumber && fpNumber != tpNumber && spNumber != tpNumber){
+            deleteSoldNumber(fpPosition, fpNumber);
+            deleteSoldNumber(spPosition, spNumber);
+            deleteSoldNumber(tpPosition, tpNumber);
+        } else if(fpNumber == spNumber) {
+            deleteSoldNumber(fpPosition, fpNumber);
+            deleteSoldNumber(tpPosition, tpNumber);
+        } else if(fpNumber == tpNumber || spNumber == tpNumber) {
+            deleteSoldNumber(fpPosition, fpNumber);
+            deleteSoldNumber(spPosition, spNumber);
+        }
 
         usdToken.safeTransfer(msg.sender, amount);
     }
@@ -191,13 +232,18 @@ contract Xance is Ownable {
         return 0;
     }
 
-    function calculateAndDelete(uint8 prizePosition, uint8 _position, uint8 _number) private returns (uint256) {
+    function deleteSoldNumber(uint8 _position, uint8 _number) private {
+        if (_position > 0) {
+            delete soldNumbers[_number][_position - 1];
+        }
+    }
+
+    function calculatePrizeAmount(uint8 prizePosition, uint8 _position, uint8 _number) view private returns (uint256) {
         if (_position == 0) {
             return 0;
         }
         uint256 totalSold_ = getSoldNumbersByAddress(_number, msg.sender);
         uint256 _prize = prizeAmounts[prizePosition];
-        delete soldNumbers[_number][_position - 1];
         return _prize * totalSold_;
     }
 
@@ -207,24 +253,36 @@ contract Xance is Ownable {
 
         uint256 balance = usdToken.balanceOf(address(this));
         BuyInfo[] memory fpWinners = getPrizeWinners(1);
+        (uint8 fpNumber, uint8 spNumber, uint8 tpNumber) = getPrizeNumbers();
         
-        for(uint256 i = 0; i < fpWinners.length; i++) {
-            uint256 amount = prizeAmounts[1] * fpWinners[i].qty;
-            balance -= amount;
+        if((fpNumber != spNumber && fpNumber != tpNumber && spNumber != tpNumber) || 
+            fpNumber == spNumber || 
+            fpNumber == tpNumber || 
+            spNumber == tpNumber){
+            for(uint256 i = 0; i < fpWinners.length; i++) {
+                uint256 amount = prizeAmounts[1] * fpWinners[i].qty;
+                balance -= amount;
+            }
         }
 
         BuyInfo[] memory spWinners = getPrizeWinners(2);
-        
-        for(uint256 i = 0; i < spWinners.length; i++) {
-            uint256 amount = prizeAmounts[2] * spWinners[i].qty;
-            balance -= amount;
+        if((fpNumber != spNumber && fpNumber != tpNumber && spNumber != tpNumber) || 
+            fpNumber == tpNumber || 
+            spNumber == tpNumber) {
+            for(uint256 i = 0; i < spWinners.length; i++) {
+                uint256 amount = prizeAmounts[2] * spWinners[i].qty;
+                balance -= amount;
+            }
         }
 
         BuyInfo[] memory tpWinners = getPrizeWinners(3);
         
-        for(uint256 i = 0; i < tpWinners.length; i++) {
-            uint256 amount = prizeAmounts[3] * tpWinners[i].qty;
-            balance -= amount;
+        if((fpNumber != spNumber && fpNumber != tpNumber && spNumber != tpNumber) || 
+            fpNumber == spNumber) {
+            for(uint256 i = 0; i < tpWinners.length; i++) {
+                uint256 amount = prizeAmounts[3] * tpWinners[i].qty;
+                balance -= amount;
+            }
         }
 
         usdToken.safeTransfer(msg.sender, balance);
