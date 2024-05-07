@@ -17,7 +17,7 @@ async function main() {
   console.log(`Account balances: ${ethers.formatEther(weiAmount)} ${network === 'binance' ? 'BNB' : 'ETH'}`);
 
   let token;
-  if(!fs.existsSync(`scripts/testnet/deployed/${network}/token.json`)) {
+  if(!fs.existsSync(`scripts/mainnet/deployed/${network}/token.json`)) {
     token = await ethers.deployContract("Token");
     await token.waitForDeployment();
 
@@ -28,7 +28,7 @@ async function main() {
     const jsonData = JSON.stringify(data);
   
     fs.writeFileSync(
-      `scripts/testnet/deployed/${network}/token.json`,
+      `scripts/mainnet/deployed/${network}/token.json`,
       jsonData,
       function (err) {
         if (err) {
@@ -40,7 +40,7 @@ async function main() {
   }
   else {
     const Token = fs.readFileSync(
-      `scripts/testnet/deployed/${network}/token.json`,
+      `scripts/mainnet/deployed/${network}/token.json`,
       'utf8',
     );
     const tokenData = JSON.parse(Token);
@@ -48,7 +48,7 @@ async function main() {
   }
 
   console.log(`Token deployed to ${token.target}`);
-  const date = '2024-04-29T00:30:00Z';
+  const date = '2024-05-27T00:30:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   
@@ -74,14 +74,14 @@ async function main() {
       contractHash: xance.target,
       tokenHash: token.target,
       lotteryDate: date,
-      country: 'Colombia',
+      country: 'Costa Rica',
     })
   });
 
   const jsonData = JSON.stringify(data);
 
   fs.writeFileSync(
-    `scripts/testnet/deployed/${network}/xance-${date}.json`,
+    `scripts/mainnet/deployed/${network}/xance-${date}.json`,
     jsonData,
     function (err) {
       if (err) {
