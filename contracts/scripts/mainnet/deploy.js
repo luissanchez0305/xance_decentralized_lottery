@@ -48,18 +48,13 @@ async function main() {
   }
 
   console.log(`Token deployed to ${token.target}`);
-  const date = '2024-05-27T00:30:00Z';
+  const date = '2024-07-07T14:30:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   
   const xance = await ethers.deployContract("Xance", [walletPrize.address, token.target, expireTime]);
   await xance.waitForDeployment();
 
-  const maxAmount = ethers.parseEther('200');
-  const transferTrx = await token.transfer(xance.target, maxAmount);
-  await transferTrx.wait();
-
-  await xance.setMaxInventoryNumber();
   const data = {
     address: xance.target,
   };
@@ -90,6 +85,12 @@ async function main() {
       console.log('JSON data is saved.');
     },
   );
+
+  const maxAmount = ethers.parseEther('200');
+  const transferTrx = await token.transfer(xance.target, maxAmount);
+  await transferTrx.wait();
+
+  await xance.setMaxInventoryNumber();
 
   console.log(
     `Xance with ${ethers.formatEther(
