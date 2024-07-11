@@ -17,6 +17,8 @@ contract Xance is Ownable {
     }
     mapping (uint8 => BuyInfo[]) public soldNumbers;
 
+    enum TrxCurrency{ USDT, BNB }
+
     uint8 public maxInventoryNumber;
     uint unitPrice = 25 * 10 ** 16;
     uint prize = 19*10**18;
@@ -41,6 +43,15 @@ contract Xance is Ownable {
         usdToken = IERC20(usdAddress);
         expiresAt = _expiresAt;
     }
+
+    event Received(address sender, uint256 amount);
+
+    // Function to receive BNB. msg.data must be empty
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    fallback() external payable {}
 
     function getSoldNumber(uint8 number) public view returns (uint256) {
         return soldNumbers[number].length;
@@ -131,7 +142,7 @@ contract Xance is Ownable {
         (prizes[1], prizes[2], prizes[3]) = (_prizeNumbers[0], _prizeNumbers[1], _prizeNumbers[2]);
     }
 
-    function buy(uint8[] calldata numbers, uint8[] calldata qtys) public isLotteryActive {
+    function buy(uint8[] calldata numbers, uint8[] calldata qtys, TrxCurrency trxChoice, uint256 exchangeValue) public isLotteryActive payable {
         require(numbers.length > 0, "You should buy at least one number");
         require(numbers.length == qtys.length, "Numbers and quantities should have the same length");
         require(block.timestamp < expiresAt, "You can't buy after the expiration date");
@@ -155,13 +166,22 @@ contract Xance is Ownable {
             totalAmount += qtys[i] * unitPrice;
         }
 
-        require(usdToken.balanceOf(msg.sender) >= totalAmount, "You don't have enough USD tokens");
-        usdToken.safeTransferFrom(msg.sender, address(this), totalAmount);
+        if(trxChoice == TrxCurrency.USDT){
+            require(usdToken.balanceOf(msg.sender) >= totalAmount, "You don't have enough USD tokens");
+            usdToken.safeTransferFrom(msg.sender, address(this), totalAmount);
+        } else if(trxChoice == TrxCurrency.BNB){
+            require(exchangeValue > 0, "No exchange rate have been specified");
+            uint256 bnbTotalAmount = totalAmount / exchangeValue;
+            require(msg.sender.balance >= bnbTotalAmount, "You don't have enough BNB tokens");
+            require(msg.value == bnbTotalAmount, "BNB value not set");
+            // payable(houseWallet).transfer(bnbTotalAmount);
+            payable(houseWallet).transfer(bnbTotalAmount);
+        }
 
         totalSold += totalAmount;
         emit Buy(msg.sender, numbers, qtys);
     }
-
+    
     function getPrizeNumbers() private view returns(uint8, uint8, uint8) {        
         require(prizes[1] > 0, "Winning numbers are not set");
         

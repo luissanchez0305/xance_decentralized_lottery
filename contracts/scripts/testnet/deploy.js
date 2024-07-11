@@ -48,7 +48,7 @@ async function main() {
   }
 
   console.log(`Token deployed to ${token.target}`);
-  const date = '2024-04-29T00:30:00Z';
+  const date = '2024-07-12T00:30:00Z';
   const d = new Date(date);
   const expireTime = d.getTime() / 1000;
   

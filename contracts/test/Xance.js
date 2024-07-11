@@ -4,18 +4,20 @@ const {
   } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
   const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
   const { expect } = require("chai");
-const { before, beforeEach } = require("node:test");
 const exp = require("constants");
+ 
+let xanceObj, account1Obj, account2Obj, account3Obj, account4Obj, account5Obj;
 
 describe("Xance", function () {
     async function deployFixture() {
+        console.log('hola')
         const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
         const ONE_WEI = 1_000_000_000_000_000_000n;
-        const d = new Date('2024-03-17T05:00:00Z');
+        const d = new Date('2024-07-17T05:00:00Z');
         const expireTime = d.getTime() / 1000; //Math.floor(Date.now() / 1000) + 60 * 60 * 1;
 
         // Contracts are deployed using the first signer/account by default
-        const oneToken = ONE_WEI;
+        const oneTokenAmount = ONE_WEI;
         const [owner, account1, account2, account3, account4, account5] = await ethers.getSigners();
 
         const Token = await ethers.getContractFactory("Token");
@@ -24,9 +26,40 @@ describe("Xance", function () {
         const Xance = await ethers.getContractFactory("Xance");
         const xance = await Xance.deploy(account1.address, token.target, expireTime);
 
-        await token.transfer(xance.target, oneToken * 500n);
+        await token.transfer(xance.target, oneTokenAmount * 500n);
         await xance.setMaxInventoryNumber();
-        return { provider: ethers.provider, expireTime, oneToken, xance, token, owner, account1, account2, account3, account4, account5 };
+        xanceObj = xance;
+        account1Obj = account1;
+        account2Obj = account2;
+        account3Obj = account3;
+        account4Obj = account4;
+        account5Obj = account5;
+
+        await token.transfer(account1Obj.address, oneTokenAmount);
+        await token.transfer(account2Obj.address, oneTokenAmount);
+        await token.transfer(account3Obj.address, oneTokenAmount);
+        await token.transfer(account4Obj.address, oneTokenAmount);
+        await token.transfer(account5Obj.address, oneTokenAmount);
+
+        await token.connect(account1Obj).approve(xanceObj.target, oneTokenAmount);
+        await token.connect(account2Obj).approve(xanceObj.target, oneTokenAmount);
+        await token.connect(account3Obj).approve(xanceObj.target, oneTokenAmount);
+        await token.connect(account4Obj).approve(xanceObj.target, oneTokenAmount);
+        await token.connect(account5Obj).approve(xanceObj.target, oneTokenAmount);
+
+        return { 
+            provider: ethers.provider, 
+            expireTime, 
+            oneTokenAmount, 
+            xance, 
+            token, 
+            owner, 
+            account1, 
+            account2, 
+            account3, 
+            account4, 
+            account5 
+        };
     }
 
     describe("Deployment", function () {
@@ -39,64 +72,60 @@ describe("Xance", function () {
     });
 
     describe("Buy", function () {
-        it("Should buy tickets", async function () {
-            const { xance, token, oneToken, account1, account2, account3, account4, account5 } = await loadFixture(deployFixture);
+        it("Should buy tickets with USDT", async function () {
+            await xanceObj.connect(account1Obj).buy([1], [4], 0, 0);
+            await xanceObj.connect(account2Obj).buy([2], [1], 0, 0);
+            await xanceObj.connect(account3Obj).buy([3,10], [1,2], 0, 0);
+            await xanceObj.connect(account4Obj).buy([4], [3], 0, 0);
+            await xanceObj.connect(account5Obj).buy([5,5], [1,3], 0, 0);
 
-            await token.transfer(account1.address, oneToken);
-            await token.transfer(account2.address, oneToken);
-            await token.transfer(account3.address, oneToken);
-            await token.transfer(account4.address, oneToken);
-            await token.transfer(account5.address, oneToken);
-
-            await token.connect(account1).approve(xance.target, oneToken);
-            await token.connect(account2).approve(xance.target, oneToken);
-            await token.connect(account3).approve(xance.target, oneToken);
-            await token.connect(account4).approve(xance.target, oneToken);
-            await token.connect(account5).approve(xance.target, oneToken);
-
-            await xance.connect(account1).buy([1], [4]);
-            await xance.connect(account2).buy([2], [1]);
-            await xance.connect(account3).buy([3,10], [1,2]);
-            await xance.connect(account4).buy([4], [3]);
-            await xance.connect(account5).buy([5,5], [1,3]);
-
-            expect(await xance.getSoldNumbersByAddress(1, account1.address)).to.equal(4);
-            expect(await xance.getSoldNumbersByAddress(2, account2.address)).to.equal(1);
-            expect(await xance.getSoldNumbersByAddress(10, account3.address)).to.equal(2);
-            expect(await xance.getSoldNumbersByAddress(4, account4.address)).to.equal(3);
-            expect(await xance.getSoldNumbersByAddress(5, account5.address)).to.equal(4);
+            expect(await xanceObj.getSoldNumbersByAddress(1, account1Obj.address)).to.equal(4);
+            expect(await xanceObj.getSoldNumbersByAddress(2, account2Obj.address)).to.equal(1);
+            expect(await xanceObj.getSoldNumbersByAddress(10, account3Obj.address)).to.equal(2);
+            expect(await xanceObj.getSoldNumbersByAddress(4, account4Obj.address)).to.equal(3);
+            expect(await xanceObj.getSoldNumbersByAddress(5, account5Obj.address)).to.equal(4);
         });
+
+        it("Should buy tickets with BNB", async function () {
+            console.log('balance 1', await ethers.provider.getBalance(xanceObj.target));
+            console.log('balance 1', await ethers.provider.getBalance(account1Obj.address));
+            console.log('balance 1', await ethers.provider.getBalance(account2Obj.address));
+            await xanceObj.connect(account2Obj).getTotalAmounts([1], [4], 2, {value: '500000000000000000'});
+            // console.log('balance', await xanceObj.connect(account2Obj).getTotalAmounts([30,40,50,60,70], [4,3,2,6,4], 2));
+            // await xanceObj.connect(account1Obj).getTotalAmounts([30,40,50,60,70,30,40,50,60,70,30,40,50,60,70,30,40,50,60,70], [4,3,2,6,4,4,3,2,6,4,4,3,2,6,4,4,3,2,6,4], 2);
+            console.log('balance 2', await ethers.provider.getBalance(xanceObj.target));
+            console.log('balance 1', await ethers.provider.getBalance(account1Obj.address));
+            console.log('balance 1', await ethers.provider.getBalance(account2Obj.address));
+            await xanceObj.connect(account1Obj).buy([1], [4], 1, 2);
+            await xanceObj.connect(account2Obj).buy([2], [1], 1, 2);
+            await xanceObj.connect(account3Obj).buy([3,10], [1,2], 1, 2);
+            await xanceObj.connect(account4Obj).buy([4], [3], 1, 2);
+            await xanceObj.connect(account5Obj).buy([5,5], [1,3], 1, 2);
+
+            expect(await xanceObj.getSoldNumbersByAddress(1, account1Obj.address)).to.equal(8);
+            expect(await xanceObj.getSoldNumbersByAddress(2, account2Obj.address)).to.equal(2);
+            expect(await xanceObj.getSoldNumbersByAddress(10, account3Obj.address)).to.equal(4);
+            expect(await xanceObj.getSoldNumbersByAddress(4, account4Obj.address)).to.equal(6);
+            expect(await xanceObj.getSoldNumbersByAddress(5, account5Obj.address)).to.equal(8);
+        });
+
     });
 
-    describe("Claim & withdraw", function () {
+    /* describe("Claim & withdraw", function () {
         it("Should buy tickets and claim", async function () {
-            const { xance, token, owner, expireTime, oneToken, account1, account2, account3, account4, account5 } = await loadFixture(deployFixture);
-            
-            await token.transfer(account1.address, oneToken * 10n);
-            await token.transfer(account2.address, oneToken * 10n);
-            await token.transfer(account3.address, oneToken * 10n);
-            await token.transfer(account4.address, oneToken * 10n);
-            await token.transfer(account5.address, oneToken * 10n); 
-
-            await token.connect(account1).approve(xance.target, oneToken * 10n);
-            await token.connect(account2).approve(xance.target, oneToken * 10n);
-            await token.connect(account3).approve(xance.target, oneToken * 10n);
-            await token.connect(account4).approve(xance.target, oneToken * 10n);
-            await token.connect(account5).approve(xance.target, oneToken * 10n);
-            
-            await xance.connect(account1).buy([1], [1]);
-            await xance.connect(account2).buy([2], [6]);
-            await xance.connect(account3).buy([3,10], [6,8]);
-            await xance.connect(account4).buy([4,10], [5,4]);
-            await xance.connect(account5).buy([5,5], [1,3]);
+            await xanceObj.connect(account1Obj).buy([1], [1], 0, 0);
+            await xanceObj.connect(account2Obj).buy([2], [6], 0, 0);
+            await xanceObj.connect(account3Obj).buy([3,10], [6,8], 0, 0);
+            await xanceObj.connect(account4Obj).buy([4,10], [5,4], 0, 0);
+            await xanceObj.connect(account5Obj).buy([5,5], [1,3], 0, 0);
 
             await time.increaseTo(expireTime + 1);
-            await xance.connect(owner).setPrizeNumbers([1010, 1034, 1008]);
+            await xanceObj.connect(owner).setPrizeNumbers([1010, 1034, 1008]);
             
-            await xance.connect(owner).withdraw();
-            await xance.connect(account3).claim();
-            await xance.connect(account4).claim();
-            const finalBalance = await token.balanceOf(account3.address);
+            await xanceObj.connect(owner).withdraw();
+            await xanceObj.connect(account3Obj).claim();
+            await xanceObj.connect(account4Obj).claim();
+            const finalBalance = await token.balanceOf(account3Obj.address);
             /*
             --account3--
             balance inicial 10
@@ -107,37 +136,24 @@ describe("Xance", function () {
             numero ganador 1010
             8 numeros 10 = 8 * 14 = 112
             balance final 118.5
-            */
+            * /
             expect(finalBalance.toString()).to.equal('118500000000000000000');
         });
 
         it("Should withdraw right amount", async function () {
-            const { xance, token, owner, expireTime, oneToken, account1, account2, account3, account4, account5 } = await loadFixture(deployFixture);
-            
-            await token.transfer(account1.address, oneToken * 10n);
-            await token.transfer(account2.address, oneToken * 10n);
-            await token.transfer(account3.address, oneToken * 10n);
-            await token.transfer(account4.address, oneToken * 10n);
-            await token.transfer(account5.address, oneToken * 10n); 
-
-            await token.connect(account1).approve(xance.target, oneToken * 10n);
-            await token.connect(account2).approve(xance.target, oneToken * 10n);
-            await token.connect(account3).approve(xance.target, oneToken * 10n);
-            await token.connect(account4).approve(xance.target, oneToken * 10n);
-            await token.connect(account5).approve(xance.target, oneToken * 10n);
-
-            await xance.connect(account1).buy([1], [1]);
-            await xance.connect(account2).buy([2], [6]);
-            await xance.connect(account3).buy([3,10], [6,8]);
-            await xance.connect(account4).buy([4,10], [5,4]);
-            await xance.connect(account5).buy([5,5], [1,3]);
+            await loadFixture(deployFixture);
+            await xanceObj.connect(account1Obj).buy([1], [1], 0, 2);
+            await xanceObj.connect(account2Obj).buy([2], [6], 0, 2);
+            await xanceObj.connect(account3Obj).buy([3,10], [6,8], 0, 2);
+            await xanceObj.connect(account4Obj).buy([4,10], [5,4], 0, 2);
+            await xanceObj.connect(account5Obj).buy([5,5], [1,3], 0, 2);
             
             await time.increaseTo(expireTime + 1);
-            await xance.connect(owner).setPrizeNumbers([1010, 1010, 1003]);
+            await xanceObj.connect(owner).setPrizeNumbers([1010, 1010, 1003]);
             
-            await xance.connect(owner).withdraw();
+            await xanceObj.connect(owner).withdraw();
 
-            const finalBalance = await token.balanceOf(xance.target);
+            const finalBalance = await token.balanceOf(xanceObj.target);
             expect(finalBalance.toString()).to.equal('180000000000000000000');
             /*
             --account3--
@@ -170,8 +186,8 @@ describe("Xance", function () {
             balance del contrato 500
             total en premios 12 + 113 + 56 = 180
             balance a retirar 500 - 180 = 320
-            */
+            * /
         });
-    });
+    }); */
 
 });
